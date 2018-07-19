@@ -14,7 +14,8 @@ namespace RendleLabs.DiagnosticSource.InfluxDBListener.Tests
             var target = FieldFormatter.TryCreate(property);
             var bytes = new byte[6];
             var span = bytes.AsSpan();
-            target.Write(obj, ref span);
+            Assert.True(target.TryWrite(obj, ref span, out int bytesWritten));
+            Assert.Equal(6, bytesWritten);
             Assert.Equal(Encoding.UTF8.GetBytes("foo=42"), bytes);
         }
     }

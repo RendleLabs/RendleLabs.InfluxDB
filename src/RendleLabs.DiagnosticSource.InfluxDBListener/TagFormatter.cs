@@ -9,13 +9,13 @@ namespace RendleLabs.DiagnosticSource.InfluxDBListener
 {
     internal sealed class TagFormatter
     {
-        private delegate int Format(object value, Span<byte> span);
+        private delegate bool Format(object value, Span<byte> span, out int bytesWritten);
 
         private const byte Backslash = 92;
         private const byte EqualSign = 61;
         private const byte Comma = 44;
         private const byte Space = 32;
-        
+
         private readonly byte[] _name;
         private readonly int _nameLength;
         private readonly PropertyInfo _property;
@@ -36,11 +36,15 @@ namespace RendleLabs.DiagnosticSource.InfluxDBListener
             return new TagFormatter(property, format);
         }
 
-        public int Write(object obj, ref Span<byte> span)
+        public bool TryWrite(object obj, ref Span<byte> span, out int bytesWritten)
         {
             var value = _property.GetValue(obj);
-            if (value == null) return 0;
-            
+            if (value == null || value.Equals(string.Empty))
+            {
+                bytesWritten = 0;
+                return true;
+            }
+
             var hold = span;
             span[0] = Comma;
             span = span.Slice(1);
@@ -48,14 +52,24 @@ namespace RendleLabs.DiagnosticSource.InfluxDBListener
             span = span.Slice(_name.Length);
             span[0] = EqualSign;
             span = span.Slice(1);
-            int written = _format(value, span);
+
+            if (!_format(value, span, out int written))
+            {
+                span = hold;
+                bytesWritten = 0;
+                return false;
+            }
+
             if (written == 0)
             {
                 span = hold;
-                return 0;
+                bytesWritten = 0;
+                return true;
             }
+
             span = span.Slice(written);
-            return _nameLength + written + 2;
+            bytesWritten = _nameLength + written + 2;
+            return true;
         }
 
         internal static bool IsTagType(Type type) => FieldTypes.Contains(type);
@@ -69,60 +83,90 @@ namespace RendleLabs.DiagnosticSource.InfluxDBListener
             return null;
         }
 
-        private static int WriteString(object value, Span<byte> span)
+        private static bool WriteString(object value, Span<byte> span, out int bytesWritten)
         {
             var str = (string) value;
-            if (str.Length == 0) return 0;
-            
-            int written = 0;
-            
+
             var length = Encoding.UTF8.GetByteCount(str);
-            
+
+            if (length > span.Length)
+            {
+                bytesWritten = 0;
+                return false;
+            }
+
             if (length == str.Length)
             {
-                written = length;
-                var buffer = ArrayPool<byte>.Shared.Rent(length);
-                
-                Encoding.UTF8.GetBytes(str, 0, str.Length, buffer, 0);
-                for (int i = 0; i < length; i++)
+                return FastWriteString(span, length, str, out bytesWritten);
+            }
+
+            return UnsafeWriteString(span, str, out bytesWritten);
+        }
+
+        private static bool FastWriteString(Span<byte> span, int length, string str, out int bytesWritten)
+        {
+            var written = length;
+            var buffer = ArrayPool<byte>.Shared.Rent(length);
+
+            Encoding.UTF8.GetBytes(str, 0, str.Length, buffer, 0);
+            for (int i = 0; i < length; i++)
+            {
+                if (span.Length == 0)
                 {
-                    switch (buffer[i])
+                    bytesWritten = 0;
+                    return false;
+                }
+
+                switch (buffer[i])
+                {
+                    case Space:
+                    case Comma:
+                    case EqualSign:
+                        span[0] = Backslash;
+                        span = span.Slice(1);
+                        written++;
+                        break;
+                }
+
+                if (span.Length > 0)
+                {
+                    span[0] = buffer[i];
+                    span = span.Slice(1);
+                }
+            }
+
+            bytesWritten = written;
+            return true;
+        }
+
+        private static unsafe bool UnsafeWriteString(Span<byte> span, string str, out int bytesWritten)
+        {
+            int written = 0;
+            byte* charBytes = stackalloc byte[8];
+            int index = 0;
+            fixed (char* c = str)
+            {
+                for (int i = 0; i < str.Length; i++)
+                {
+                    if (span.Length == 0)
                     {
-                        case Space:
-                        case Comma:
-                        case EqualSign:
-                            span[0] = Backslash;
+                        bytesWritten = 0;
+                        return false;
+                    }
+
+                    switch (*c + i)
+                    {
+                        case ' ':
+                        case ',':
+                        case '=':
+                            span[index++] = Backslash;
                             span = span.Slice(1);
                             written++;
                             break;
                     }
 
-                    span[0] = buffer[i];
-                    span = span.Slice(1);
-                }
-
-                return written;
-            }
-            
-            unsafe
-            {
-                byte* charBytes = stackalloc byte[8];
-                int index = 0;
-                fixed (char* c = str)
-                {
-                    for (int i = 0; i < str.Length; i++)
+                    if (span.Length > 0)
                     {
-                        switch (*c + i)
-                        {
-                            case ' ':
-                            case ',':
-                            case '=':
-                                span[index++] = Backslash;
-                                span = span.Slice(1);
-                                written++;
-                                break;
-                        }
-
                         int byteCount = Encoding.UTF8.GetBytes(c + i, 1, charBytes, 8);
                         new ReadOnlySpan<byte>(charBytes, byteCount).CopyTo(span);
                         span = span.Slice(byteCount);
@@ -131,15 +175,18 @@ namespace RendleLabs.DiagnosticSource.InfluxDBListener
                 }
             }
 
-            return written;
+            bytesWritten = written;
+            return true;
         }
 
-        private static int WriteDateTime(object value, Span<byte> span) => Utf8Formatter.TryFormat((DateTime) value, span, out int written, 'O') ? written : 0;
+        private static bool WriteDateTime(object value, Span<byte> span, out int bytesWritten) =>
+            Utf8Formatter.TryFormat((DateTime) value, span, out bytesWritten);
 
-        private static int WriteDateTimeOffset(object value, Span<byte> span) =>
-            Utf8Formatter.TryFormat((DateTimeOffset) value, span, out int written, 'O') ? written : 0;
+        private static bool WriteDateTimeOffset(object value, Span<byte> span, out int bytesWritten) =>
+            Utf8Formatter.TryFormat((DateTimeOffset) value, span, out bytesWritten);
 
-        private static int WriteGuid(object value, Span<byte> span) => Utf8Formatter.TryFormat((Guid) value, span, out int written, 'N') ? written : 0;
+        private static bool WriteGuid(object value, Span<byte> span, out int bytesWritten) =>
+            Utf8Formatter.TryFormat((Guid) value, span, out bytesWritten);
 
         private static readonly HashSet<Type> FieldTypes = new HashSet<Type>(new[]
         {

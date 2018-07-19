@@ -13,7 +13,7 @@ namespace RendleLabs.DiagnosticSource.InfluxDBListener.Tests
             const string expected = "test,tag=foo foo=42\n";
             
             var obj = new {tag = "foo", foo = 42};
-            var formatter = InfluxLineFormatter.GetOrAdd("test", obj.GetType());
+            var formatter = new InfluxLineFormatter("test", obj.GetType());
 
             var memory = ArrayPool<byte>.Shared.Rent(1024);
             var span = memory.AsSpan();

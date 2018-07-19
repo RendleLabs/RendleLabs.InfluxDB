@@ -8,8 +8,10 @@ namespace RendleLabs.DiagnosticSource.InfluxDBListener
 {
     internal sealed class FieldFormatter
     {
-        private delegate int Format(object value, Span<byte> span);
+        private delegate bool Format(object value, Span<byte> span, out int written);
 
+        private const byte TrueValue = (byte) 't';
+        private const byte FalseValue = (byte) 'f';
         private const byte Backslash = 92;
         private const byte EqualSign = 61;
         private readonly byte[] _name;
@@ -32,24 +34,36 @@ namespace RendleLabs.DiagnosticSource.InfluxDBListener
             return new FieldFormatter(property, format);
         }
 
-        public int Write(object obj, ref Span<byte> span)
+        public bool TryWrite(object obj, ref Span<byte> span, out int bytesWritten)
         {
+            if (span.Length < _nameLength + 2)
+            {
+                bytesWritten = 0;
+                return false;
+            }
+            
             var value = _property.GetValue(obj);
-            if (value == null) return 0;
+            if (value == null)
+            {
+                bytesWritten = 0;
+                return true;
+            }
+            
             var hold = span;
             _name.CopyTo(span);
             span = span.Slice(_name.Length);
             span[0] = EqualSign;
             span = span.Slice(1);
-            int written = _format(value, span);
-            if (written == 0)
+            if (!_format(value, span, out int written))
             {
                 span = hold;
-                return 0;
+                bytesWritten = 0;
+                return false;
             }
 
             span = span.Slice(written);
-            return _nameLength + written + 1;
+            bytesWritten = _nameLength + written + 1;
+            return true;
         }
 
         internal static bool IsFieldType(Type type) => FieldTypes.Contains(type);
@@ -75,25 +89,39 @@ namespace RendleLabs.DiagnosticSource.InfluxDBListener
             return null;
         }
 
-        private static int WriteBoolean(object value, Span<byte> span) => Utf8Formatter.TryFormat((bool) value, span, out int written) ? written : 0;
-        private static int WriteByte(object value, Span<byte> span) => Utf8Formatter.TryFormat((byte) value, span, out int written) ? written : 0;
-        private static int WriteDateTime(object value, Span<byte> span) => Utf8Formatter.TryFormat((DateTime) value, span, out int written) ? written : 0;
+        private static bool WriteBoolean(object value, Span<byte> span, out int written)
+        {
+            if ((bool) value)
+            {
+                span[0] = TrueValue;
+            }
+            else
+            {
+                span[0] = FalseValue;
+            }
 
-        private static int WriteDateTimeOffset(object value, Span<byte> span) =>
-            Utf8Formatter.TryFormat((DateTimeOffset) value, span, out int written) ? written : 0;
+            written = 1;
+            return true;
+        }
+        
+        private static bool WriteByte(object value, Span<byte> span, out int written) => Utf8Formatter.TryFormat((byte) value, span, out written);
+        private static bool WriteDateTime(object value, Span<byte> span, out int written) => Utf8Formatter.TryFormat((DateTime) value, span, out written);
 
-        private static int WriteDecimal(object value, Span<byte> span) => Utf8Formatter.TryFormat((decimal) value, span, out int written) ? written : 0;
-        private static int WriteDouble(object value, Span<byte> span) => Utf8Formatter.TryFormat((double) value, span, out int written) ? written : 0;
-        private static int WriteGuid(object value, Span<byte> span) => Utf8Formatter.TryFormat((Guid) value, span, out int written) ? written : 0;
-        private static int WriteInt16(object value, Span<byte> span) => Utf8Formatter.TryFormat((short) value, span, out int written) ? written : 0;
-        private static int WriteInt32(object value, Span<byte> span) => Utf8Formatter.TryFormat((int) value, span, out int written) ? written : 0;
-        private static int WriteInt64(object value, Span<byte> span) => Utf8Formatter.TryFormat((long) value, span, out int written) ? written : 0;
-        private static int WriteSByte(object value, Span<byte> span) => Utf8Formatter.TryFormat((sbyte) value, span, out int written) ? written : 0;
-        private static int WriteSingle(object value, Span<byte> span) => Utf8Formatter.TryFormat((float) value, span, out int written) ? written : 0;
-        private static int WriteTimeSpan(object value, Span<byte> span) => Utf8Formatter.TryFormat((float) value, span, out int written) ? written : 0;
-        private static int WriteUInt16(object value, Span<byte> span) => Utf8Formatter.TryFormat((ushort) value, span, out int written) ? written : 0;
-        private static int WriteUInt32(object value, Span<byte> span) => Utf8Formatter.TryFormat((uint) value, span, out int written) ? written : 0;
-        private static int WriteUInt64(object value, Span<byte> span) => Utf8Formatter.TryFormat((ulong) value, span, out int written) ? written : 0;
+        private static bool WriteDateTimeOffset(object value, Span<byte> span, out int written) =>
+            Utf8Formatter.TryFormat((DateTimeOffset) value, span, out written);
+
+        private static bool WriteDecimal(object value, Span<byte> span, out int written) => Utf8Formatter.TryFormat((decimal) value, span, out written);
+        private static bool WriteDouble(object value, Span<byte> span, out int written) => Utf8Formatter.TryFormat((double) value, span, out written);
+        private static bool WriteGuid(object value, Span<byte> span, out int written) => Utf8Formatter.TryFormat((Guid) value, span, out written);
+        private static bool WriteInt16(object value, Span<byte> span, out int written) => Utf8Formatter.TryFormat((short) value, span, out written);
+        private static bool WriteInt32(object value, Span<byte> span, out int written) => Utf8Formatter.TryFormat((int) value, span, out written);
+        private static bool WriteInt64(object value, Span<byte> span, out int written) => Utf8Formatter.TryFormat((long) value, span, out written);
+        private static bool WriteSByte(object value, Span<byte> span, out int written) => Utf8Formatter.TryFormat((sbyte) value, span, out written);
+        private static bool WriteSingle(object value, Span<byte> span, out int written) => Utf8Formatter.TryFormat((float) value, span, out written);
+        private static bool WriteTimeSpan(object value, Span<byte> span, out int written) => Utf8Formatter.TryFormat((float) value, span, out written);
+        private static bool WriteUInt16(object value, Span<byte> span, out int written) => Utf8Formatter.TryFormat((ushort) value, span, out written);
+        private static bool WriteUInt32(object value, Span<byte> span, out int written) => Utf8Formatter.TryFormat((uint) value, span, out written);
+        private static bool WriteUInt64(object value, Span<byte> span, out int written) => Utf8Formatter.TryFormat((ulong) value, span, out written);
 
         private static readonly HashSet<Type> FieldTypes = new HashSet<Type>(new[]
         {

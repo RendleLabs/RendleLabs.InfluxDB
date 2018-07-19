@@ -8,12 +8,12 @@ namespace RendleLabs.DiagnosticSource.InfluxDBListener
     {
         private const byte Comma = 44;
         private const byte Space = 32;
-        
+
         private readonly FieldFormatter[] _fieldFormatters;
         private readonly int _fieldCount;
         private readonly TagFormatter[] _tagFormatters;
         private readonly int _tagCount;
-        
+
         public ObjectFormatter(Type type)
         {
             var fieldFormatters = new List<FieldFormatter>();
@@ -43,34 +43,48 @@ namespace RendleLabs.DiagnosticSource.InfluxDBListener
             _tagFormatters = tagFormatters.ToArray();
             _tagCount = _tagFormatters.Length;
         }
-        
-        public int Write(object args, ref Span<byte> span)
+
+        public bool Write(object args, ref Span<byte> span, out int bytesWritten)
         {
-            int written = 1;
+            if (span.Length == 0) goto fail;
+
+            bytesWritten = 0;
+
             bool comma = false;
 
             for (int i = 0; i < _tagCount; i++)
             {
-                written += _tagFormatters[i].Write(args, ref span);
+                if (span.Length == 0) goto fail;
+
+                if (!_tagFormatters[i].TryWrite(args, ref span, out int tagWritten)) goto fail;
+
+                bytesWritten += tagWritten;
             }
 
             span[0] = Space;
             span = span.Slice(1);
-            
+
             for (int i = 0; i < _fieldCount; i++)
             {
+                if (span.Length == 0) goto fail;
+                
                 if (comma)
                 {
                     span[0] = Comma;
                     span = span.Slice(1);
+                    bytesWritten++;
                 }
 
-                int fieldWritten = _fieldFormatters[i].Write(args, ref span);
-                written += fieldWritten;
+                if (!_fieldFormatters[i].TryWrite(args, ref span, out int fieldWritten)) goto fail;
+
+                bytesWritten += fieldWritten;
                 comma = comma || fieldWritten > 0;
             }
+            return true;
 
-            return written;
+            fail:
+            bytesWritten = 0;
+            return false;
         }
     }
 }
