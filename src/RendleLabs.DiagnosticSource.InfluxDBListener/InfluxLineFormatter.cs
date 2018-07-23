@@ -1,11 +1,13 @@
 using System;
+using System.Buffers.Text;
 using RendleLabs.InfluxDB;
 
 namespace RendleLabs.DiagnosticSource.InfluxDBListener
 {
     public class InfluxLineFormatter : ILineWriter
     {
-        private const byte Newline = 10;
+        private const byte Newline = (byte)'\n';
+        private const byte Space = (byte)' ';
         
         private readonly byte[] _measurement;
         private readonly int _measurementLength;
@@ -28,8 +30,20 @@ namespace RendleLabs.DiagnosticSource.InfluxDBListener
                 bytesWritten = 0;
                 return false;
             }
+
+            span[0] = Space;
+            span = span.Slice(1);
+            
+            if (!Utf8Formatter.TryFormat(requestTimestamp, span, out int timestampWritten) || span.Length == timestampWritten)
+            {
+                bytesWritten = 0;
+                return false;
+            }
+
+            span = span.Slice(timestampWritten);
+            
             span[0] = Newline;
-            bytesWritten = _measurementLength + written + 1;
+            bytesWritten = _measurementLength + written + timestampWritten + 2;
             return true;
         }
     }

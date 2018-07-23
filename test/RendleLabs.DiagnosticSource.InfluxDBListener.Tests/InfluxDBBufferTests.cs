@@ -1,8 +1,7 @@
-using System;
 using System.Buffers;
+using System.Diagnostics;
 using System.IO.Pipelines;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 using RendleLabs.InfluxDB;
 using Xunit;
 
@@ -11,29 +10,29 @@ namespace RendleLabs.DiagnosticSource.InfluxDBListener.Tests
     public class InfluxDBBufferTests
     {
         [Fact]
-        public async Task InfluxLineFormatterWritesToBuffer()
+        public void InfluxLineFormatterWritesToBuffer()
         {
-            var client = new MockClient();
-            var buffer = InfluxDBBuffer.Create(client, "testdb", "testrp");
-            var obj = new {size = 100, duration = 1000, url = "test.com", id = "42"};
-            var formatter = new InfluxLineFormatter("test", );
-        }
-    }
+            var mockHttp = new MockHttpClient();
+            var client = new InfluxDBClientBuilder(mockHttp, "test").Build();
+            DiagnosticSourceInfluxDB.Listen(client, s => s == "tests");
 
-    internal class MockClient : IInfluxDBClient
-    {
-        public string Text { get; private set; }
-        public byte[] Bytes { get; private set; }
-        public string Path { get; private set; }
-        
-        public Task Write(byte[] data, int size, string path)
-        {
-            Bytes = new byte[size];
-            Array.Copy(data, Bytes, size);
-
-            Text = Encoding.UTF8.GetString(data, 0, size);
-            Path = path;
-            return Task.CompletedTask;
+            var source = new DiagnosticListener("tests");
+            if (source.IsEnabled("test"))
+            {
+                var obj = new {size = 100, duration = 1000, url = "test.com", id = "42"};
+                source.Write("test", obj);
+            }
+            
+            // Forces the client to complete outstanding requests
+            ((InfluxDBClient)client).Dispose();
+            
+            Assert.Equal("write?db=test", mockHttp.Path);
+            Assert.NotNull(mockHttp.Bytes);
+            Assert.StartsWith("tests_test", mockHttp.Text);
+            Assert.Contains("size=100", mockHttp.Text);
+            Assert.Contains("duration=1000", mockHttp.Text);
+            Assert.Contains("url=test.com", mockHttp.Text);
+            Assert.Contains("id=42", mockHttp.Text);
         }
     }
 }

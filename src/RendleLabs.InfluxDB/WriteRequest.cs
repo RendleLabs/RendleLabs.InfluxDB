@@ -15,6 +15,7 @@ namespace RendleLabs.InfluxDB
             Writer = writer;
             Args = args;
             Timestamp = timestamp.GetValueOrDefault(DateTimeOffset.UtcNow).ToUnixTimeMilliseconds();
+            Flush = false;
         }
 
         private WriteRequest(bool flush)

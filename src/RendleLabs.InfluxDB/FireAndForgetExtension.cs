@@ -6,7 +6,7 @@ namespace RendleLabs.InfluxDB
 {
     public static class FireAndForgetExtension
     {
-        public static async void FireAndForget(this Task task, Action<Exception> errorCallback = null) =>
+        public static void FireAndForget(this Task task, Action<Exception> errorCallback = null) =>
             task.ConfigureAwait(false).FireAndForget(errorCallback);
 
         public static async void FireAndForget(this ConfiguredTaskAwaitable awaitable, Action<Exception> errorCallback = null)

@@ -61,6 +61,11 @@ namespace RendleLabs.DiagnosticSource.InfluxDBListener
                 bytesWritten += tagWritten;
             }
 
+            if (bytesWritten > 0)
+            {
+                bytesWritten++;
+            }
+
             span[0] = Space;
             span = span.Slice(1);
 
