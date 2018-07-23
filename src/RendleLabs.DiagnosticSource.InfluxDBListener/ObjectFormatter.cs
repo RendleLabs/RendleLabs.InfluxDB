@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace RendleLabs.DiagnosticSource.InfluxDBListener
 {
-    public sealed class ObjectFormatter
+    internal sealed class ObjectFormatter
     {
         private const byte Comma = 44;
         private const byte Space = 32;

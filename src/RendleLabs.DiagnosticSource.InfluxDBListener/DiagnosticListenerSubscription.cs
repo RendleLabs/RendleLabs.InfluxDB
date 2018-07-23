@@ -5,7 +5,7 @@ using RendleLabs.InfluxDB;
 
 namespace RendleLabs.DiagnosticSource.InfluxDBListener
 {
-    public sealed class DiagnosticListenerSubscription : IObserver<KeyValuePair<string, object>>, IDisposable
+    internal sealed class DiagnosticListenerSubscription : IObserver<KeyValuePair<string, object>>, IDisposable
     {
         private readonly InfluxLineFormatterCollection _formatters;
         private readonly DiagnosticListener _listener;
@@ -13,7 +13,8 @@ namespace RendleLabs.DiagnosticSource.InfluxDBListener
         private readonly Action<DiagnosticListener, Exception> _onError;
         private readonly IDisposable _subscription;
 
-        public DiagnosticListenerSubscription(DiagnosticListener listener, IInfluxDBClient client, Func<string, string> nameFixer = null, Action<DiagnosticListener, Exception> onError = null)
+        internal DiagnosticListenerSubscription(DiagnosticListener listener, IInfluxDBClient client, Func<string, string> nameFixer = null,
+            Action<DiagnosticListener, Exception> onError = null)
         {
             _listener = listener;
             _client = client;
@@ -21,7 +22,7 @@ namespace RendleLabs.DiagnosticSource.InfluxDBListener
             _onError = onError;
             _subscription = listener.Subscribe(this);
         }
-        
+
         public void OnCompleted() => Dispose();
 
         public void OnError(Exception error)

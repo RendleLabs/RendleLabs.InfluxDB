@@ -35,8 +35,8 @@ namespace RendleLabs.InfluxDB
             _errorCallback = errorCallback;
 
             _path = retentionPolicy == null
-                ? $"write?db={Uri.EscapeDataString(database)}"
-                : $"write?db={Uri.EscapeDataString(database)}&rp={Uri.EscapeDataString(retentionPolicy)}";
+                ? $"write?db={Uri.EscapeDataString(database)}&precision=ms"
+                : $"write?db={Uri.EscapeDataString(database)}&precision=ms&rp={Uri.EscapeDataString(retentionPolicy)}";
 
             _bufferSize = initialBufferSize;
             _maxBufferSize = maxBufferSize;
@@ -90,11 +90,26 @@ namespace RendleLabs.InfluxDB
 
             while (!token.IsCancellationRequested)
             {
-                var request = _requests.Take(token);
-                if (!token.IsCancellationRequested)
+                try
                 {
-                    ProcessRequest(request);
+                    var request = _requests.Take(token);
+                    if (!token.IsCancellationRequested)
+                    {
+                        ProcessRequest(request);
+                    }
                 }
+                catch (OperationCanceledException)
+                {
+                    // Ignore
+                }
+            }
+        }
+
+        private void Flush()
+        {
+            while (_requests.TryTake(out var request))
+            {
+                ProcessRequest(request);
             }
         }
 
@@ -169,11 +184,19 @@ namespace RendleLabs.InfluxDB
 
         public async void Dispose()
         {
+            await DisposeImpl();
+        }
+
+        internal async Task DisposeImpl()
+        {
             _timer?.Dispose();
-            _requests?.Dispose();
             _cancellationTokenSource.Cancel();
             _thread.Join();
 
+            Flush();
+
+            _requests?.Dispose();
+            
             if (_size > 0)
             {
                 Send(_memory, _size);

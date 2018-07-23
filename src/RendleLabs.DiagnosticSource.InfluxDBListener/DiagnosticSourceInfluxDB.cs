@@ -15,7 +15,7 @@ namespace RendleLabs.DiagnosticSource.InfluxDBListener
         private readonly Func<string, string> _nameFixer;
         private readonly List<DiagnosticListenerSubscription> _subscriptions = new List<DiagnosticListenerSubscription>();
 
-        public DiagnosticSourceInfluxDB(Func<string, bool> sourceNamePredicate, IInfluxDBClient client, Func<string, string> nameFixer = null)
+        private DiagnosticSourceInfluxDB(Func<string, bool> sourceNamePredicate, IInfluxDBClient client, Func<string, string> nameFixer = null)
         {
             _sourceNamePredicate = sourceNamePredicate;
             _client = client;
