@@ -11,7 +11,7 @@ namespace RendleLabs.InfluxDB
         private static readonly ConcurrentDictionary<Uri, InfluxDBHttpClient> _clients = new ConcurrentDictionary<Uri, InfluxDBHttpClient>();
         private readonly HttpClient _client;
 
-        internal InfluxDBHttpClient(Uri serverUri)
+        private InfluxDBHttpClient(Uri serverUri)
         {
             _client = new HttpClient
             {

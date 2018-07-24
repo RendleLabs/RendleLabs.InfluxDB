@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using RendleLabs.InfluxDB;
 
-namespace RendleLabs.DiagnosticSource.InfluxDBListener
+namespace RendleLabs.InfluxDB.DiagnosticSourceListener
 {
-    internal sealed class DiagnosticListenerSubscription : IObserver<KeyValuePair<string, object>>, IDisposable
+    /// <summary>
+    /// Observer for <see cref="DiagnosticSource"/> that writes to InfluxDB.
+    /// </summary>
+    internal sealed class DiagnosticListenerObserver : IObserver<KeyValuePair<string, object>>, IDisposable
     {
         private readonly InfluxLineFormatterCollection _formatters;
         private readonly DiagnosticListener _listener;
@@ -13,7 +15,7 @@ namespace RendleLabs.DiagnosticSource.InfluxDBListener
         private readonly Action<DiagnosticListener, Exception> _onError;
         private readonly IDisposable _subscription;
 
-        internal DiagnosticListenerSubscription(DiagnosticListener listener, IInfluxDBClient client, Func<string, string> nameFixer = null,
+        internal DiagnosticListenerObserver(DiagnosticListener listener, IInfluxDBClient client, Func<string, string> nameFixer = null,
             Action<DiagnosticListener, Exception> onError = null)
         {
             _listener = listener;

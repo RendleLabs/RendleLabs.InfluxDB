@@ -1,10 +1,9 @@
 using System;
 using System.Buffers.Text;
-using RendleLabs.InfluxDB;
 
-namespace RendleLabs.DiagnosticSource.InfluxDBListener
+namespace RendleLabs.InfluxDB.DiagnosticSourceListener
 {
-    public class InfluxLineFormatter : ILineWriter
+    internal class InfluxLineFormatter : ILineWriter
     {
         private const byte Newline = (byte)'\n';
         private const byte Space = (byte)' ';

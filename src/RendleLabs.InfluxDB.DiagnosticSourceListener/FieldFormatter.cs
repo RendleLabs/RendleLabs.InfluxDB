@@ -2,9 +2,8 @@ using System;
 using System.Buffers.Text;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
 
-namespace RendleLabs.DiagnosticSource.InfluxDBListener
+namespace RendleLabs.InfluxDB.DiagnosticSourceListener
 {
     internal sealed class FieldFormatter
     {

@@ -5,11 +5,11 @@ VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{2C2DA860-5D3A-4C26-B90C-67105D955079}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RendleLabs.DiagnosticSource.InfluxDBListener", "src\RendleLabs.DiagnosticSource.InfluxDBListener\RendleLabs.DiagnosticSource.InfluxDBListener.csproj", "{616A922D-1097-44E2-A8D3-BB43F267C9FD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RendleLabs.InfluxDB.DiagnosticSourceListener", "src\RendleLabs.InfluxDB.DiagnosticSourceListener\RendleLabs.InfluxDB.DiagnosticSourceListener.csproj", "{616A922D-1097-44E2-A8D3-BB43F267C9FD}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{DC0BD70D-279A-429E-BAEB-D120DC40038F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RendleLabs.DiagnosticSource.InfluxDBListener.Tests", "test\RendleLabs.DiagnosticSource.InfluxDBListener.Tests\RendleLabs.DiagnosticSource.InfluxDBListener.Tests.csproj", "{B9086519-F5BF-4E5D-AD86-63D7799425FC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RendleLabs.InfluxDB.DiagnosticSourceListener.Tests", "test\RendleLabs.InfluxDB.DiagnosticSourceListener.Tests\RendleLabs.InfluxDB.DiagnosticSourceListener.Tests.csproj", "{B9086519-F5BF-4E5D-AD86-63D7799425FC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RendleLabs.InfluxDB", "src\RendleLabs.InfluxDB\RendleLabs.InfluxDB.csproj", "{DB3EFE73-739B-464F-B238-1EE00A5F3F15}"
 EndProject

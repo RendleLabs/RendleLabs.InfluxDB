@@ -1,8 +1,11 @@
 using System;
 using System.Text;
 
-namespace RendleLabs.DiagnosticSource.InfluxDBListener
+namespace RendleLabs.InfluxDB.DiagnosticSourceListener
 {
+    /// <summary>
+    /// Provides methods to escape special characters in InfluxDB field names.
+    /// </summary>
     internal static class InfluxName
     {
         private const byte Backslash = 92;

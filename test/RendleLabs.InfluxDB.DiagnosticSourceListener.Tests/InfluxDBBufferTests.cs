@@ -1,12 +1,8 @@
-using System.Buffers;
 using System.Diagnostics;
-using System.IO.Pipelines;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using RendleLabs.InfluxDB;
 using Xunit;
 
-namespace RendleLabs.DiagnosticSource.InfluxDBListener.Tests
+namespace RendleLabs.InfluxDB.DiagnosticSourceListener.Tests
 {
     public class InfluxDBBufferTests
     {

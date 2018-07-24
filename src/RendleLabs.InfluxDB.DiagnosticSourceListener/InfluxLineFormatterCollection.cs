@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Concurrent;
 
-namespace RendleLabs.DiagnosticSource.InfluxDBListener
+namespace RendleLabs.InfluxDB.DiagnosticSourceListener
 {
-    public class InfluxLineFormatterCollection
+    internal class InfluxLineFormatterCollection
     {
         private readonly string _listenerName;
         private readonly Func<string, string> _nameFixer;

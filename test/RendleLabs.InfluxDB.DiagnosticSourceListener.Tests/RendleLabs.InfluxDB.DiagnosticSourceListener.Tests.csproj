@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\RendleLabs.DiagnosticSource.InfluxDBListener\RendleLabs.DiagnosticSource.InfluxDBListener.csproj" />
+    <ProjectReference Include="..\..\src\RendleLabs.InfluxDB.DiagnosticSourceListener\RendleLabs.InfluxDB.DiagnosticSourceListener.csproj" />
     <ProjectReference Include="..\..\src\RendleLabs.InfluxDB\RendleLabs.InfluxDB.csproj" />
   </ItemGroup>
 

@@ -3,7 +3,7 @@ using System.Text;
 using System.Threading.Tasks;
 using RendleLabs.InfluxDB;
 
-namespace RendleLabs.DiagnosticSource.InfluxDBListener.Tests
+namespace RendleLabs.InfluxDB.DiagnosticSourceListener.Tests
 {
     internal class MockHttpClient : IInfluxDBHttpClient
     {

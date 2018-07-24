@@ -1,8 +1,7 @@
-using System;
 using System.Text;
 using Xunit;
 
-namespace RendleLabs.DiagnosticSource.InfluxDBListener.Tests
+namespace RendleLabs.InfluxDB.DiagnosticSourceListener.Tests
 {
     public class InfluxNameTests
     {
