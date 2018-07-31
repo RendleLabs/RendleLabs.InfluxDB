@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 namespace RendleLabs.InfluxDB
 {
     /// <summary>
@@ -11,5 +13,7 @@ namespace RendleLabs.InfluxDB
         /// <param name="request">The request to be written.</param>
         /// <returns><c>true</c> if the request is queued successfully, otherwise, <c>false</c>.</returns>
         bool TryRequest(WriteRequest request);
+
+        Task FlushAsync();
     }
 }

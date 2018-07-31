@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace RendleLabs.InfluxDB
@@ -22,7 +23,7 @@ namespace RendleLabs.InfluxDB
         public async Task Write(byte[] data, int size, string path)
         {
             var content = new ByteArrayContent(data, 0, size);
-            await _client.PostAsync(path, content).ConfigureAwait(false);
+            var responseMessage = await _client.PostAsync(path, content).ConfigureAwait(false);
         }
 
         public static InfluxDBHttpClient Get(string serverUrl) => Get(new Uri(serverUrl));

@@ -50,8 +50,6 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
 
             bytesWritten = 0;
 
-            bool comma = false;
-
             for (int i = 0; i < _tagCount; i++)
             {
                 if (span.Length == 0) goto fail;
@@ -61,14 +59,12 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
                 bytesWritten += tagWritten;
             }
 
-            if (bytesWritten > 0)
-            {
-                bytesWritten++;
-            }
 
             span[0] = Space;
             span = span.Slice(1);
+            bytesWritten++;
 
+            bool comma = false;
             for (int i = 0; i < _fieldCount; i++)
             {
                 if (span.Length == 0) goto fail;

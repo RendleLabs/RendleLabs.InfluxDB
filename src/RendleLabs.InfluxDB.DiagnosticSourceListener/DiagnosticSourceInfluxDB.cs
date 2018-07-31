@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 
 namespace RendleLabs.InfluxDB.DiagnosticSourceListener
@@ -12,9 +12,9 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
         private readonly Func<string, bool> _sourceNamePredicate;
         private readonly IInfluxDBClient _client;
         private readonly Func<string, string> _nameFixer;
-        private readonly List<DiagnosticListenerObserver> _observers = new List<DiagnosticListenerObserver>();
+        private readonly ConcurrentBag<DiagnosticListenerObserver> _observers = new ConcurrentBag<DiagnosticListenerObserver>();
 
-        private DiagnosticSourceInfluxDB(Func<string, bool> sourceNamePredicate, IInfluxDBClient client, Func<string, string> nameFixer = null)
+        private DiagnosticSourceInfluxDB(IInfluxDBClient client, Func<string, bool> sourceNamePredicate, Func<string, string> nameFixer = null)
         {
             _sourceNamePredicate = sourceNamePredicate;
             _client = client;
@@ -38,12 +38,13 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
             }
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Dispose of all subscriptions.
         /// </summary>
         public void Dispose()
         {
-            foreach (var subscription in _observers)
+            while (_observers.TryTake(out var subscription))
             {
                 try
                 {
@@ -62,10 +63,11 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
         /// <param name="client">The <see cref="IInfluxDBClient"/> to write data to.</param>
         /// <param name="sourceNamePredicate">A predicate to match <see cref="DiagnosticSource"/> names.</param>
         /// <param name="nameFixer">(Optional) A function to mutate names, e.g. to convert dotted names to underscored.</param>
-        public static void Listen(IInfluxDBClient client, Func<string, bool> sourceNamePredicate, Func<string, string> nameFixer = null)
+        public static IDisposable Listen(IInfluxDBClient client, Func<string, bool> sourceNamePredicate, Func<string, string> nameFixer = null)
         {
-            var listener = new DiagnosticSourceInfluxDB(sourceNamePredicate, client, nameFixer);
+            var listener = new DiagnosticSourceInfluxDB(client, sourceNamePredicate, nameFixer);
             DiagnosticListener.AllListeners.Subscribe(listener);
+            return listener;
         }
     }
 

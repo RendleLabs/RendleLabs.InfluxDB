@@ -17,16 +17,12 @@ namespace RendleLabs.InfluxDB
         private readonly object _sync = new object();
         private readonly List<Task> _pending = new List<Task>();
         private readonly CancellationTokenSource _cancellationTokenSource;
+        private readonly TimeSpan _forceFlushInterval;
         private readonly Timer _timer;
         private byte[] _memory;
         private int _size;
         private int _bufferSize;
         private readonly int _maxBufferSize;
-
-        private InfluxDBClient(IInfluxDBHttpClient httpClient, string database, string retentionPolicy, Action<Exception> errorCallback, int initialBufferSize,
-            int maxBufferSize, TimeSpan? forceFlushInterval) : this(httpClient, database, retentionPolicy, errorCallback, initialBufferSize, maxBufferSize, null, forceFlushInterval)
-        {
-        }
 
         private InfluxDBClient(IInfluxDBHttpClient httpClient, string database, string retentionPolicy, Action<Exception> errorCallback, int initialBufferSize,
             int maxBufferSize, CancellationTokenSource cancellationTokenSource, TimeSpan? forceFlushInterval)
@@ -45,7 +41,8 @@ namespace RendleLabs.InfluxDB
 
             if (forceFlushInterval != null)
             {
-                _timer = new Timer(ForceFlush, null, TimeSpan.Zero, forceFlushInterval.Value);
+                _forceFlushInterval = forceFlushInterval.Value;
+                _timer = new Timer(ForceFlush, null, _forceFlushInterval, _forceFlushInterval);
             }
 
             _thread = new Thread(Run)
@@ -105,7 +102,7 @@ namespace RendleLabs.InfluxDB
             }
         }
 
-        private void Flush()
+        private void DrainQueue()
         {
             while (_requests.TryTake(out var request))
             {
@@ -158,6 +155,7 @@ namespace RendleLabs.InfluxDB
                 oldSize = _size;
                 _memory = ArrayPool<byte>.Shared.Rent(_bufferSize);
                 _size = 0;
+                _timer?.Change(_forceFlushInterval, _forceFlushInterval);
             }
 
             Send(oldBuffer, oldSize);
@@ -184,16 +182,16 @@ namespace RendleLabs.InfluxDB
 
         public async void Dispose()
         {
-            await DisposeImpl();
+            await FlushAsync();
         }
 
-        internal async Task DisposeImpl()
+        public async Task FlushAsync()
         {
             _timer?.Dispose();
             _cancellationTokenSource.Cancel();
             _thread.Join();
 
-            Flush();
+            DrainQueue();
 
             _requests?.Dispose();
             

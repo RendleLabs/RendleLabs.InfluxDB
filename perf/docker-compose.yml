@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+
+  influxdb:
+    image: influxdb:1.6.0-alpine
+    networks:
+      - influx
+    ports:
+      - "8086:8086"
+
+  chronograf:
+    image: chronograf:1.6.0-alpine
+    command: --influxdb-url=http://influxdb:8086
+    networks:
+      - influx
+    ports:
+      - "8888:8888"
+
+networks:
+  influx:

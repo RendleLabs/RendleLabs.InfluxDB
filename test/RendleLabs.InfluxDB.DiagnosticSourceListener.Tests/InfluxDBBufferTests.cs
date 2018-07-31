@@ -24,7 +24,7 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener.Tests
             }
             
             // Forces the client to complete outstanding requests
-            await ((InfluxDBClient)client).DisposeImpl();
+            await ((InfluxDBClient)client).FlushAsync();
             
             Assert.Equal("write?db=test&precision=ms", mockHttp.Path);
             Assert.NotNull(mockHttp.Bytes);
