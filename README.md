@@ -35,8 +35,8 @@ Intel Core i7-4770K CPU 3.50GHz (Haswell), 1 CPU, 8 logical and 4 physical cores
 | LineFormatter |  99.08 us | 0.6337 us | 0.5927 us |  6.9580 |      - |  28.52 KB |
 |     PointData | 129.67 us | 1.1886 us | 1.0537 us | 34.4238 | 0.2441 | 141.02 KB |
 
-The raw performance difference is not that marked: 30 microseconds is neither here nor there. But the difference in the
-amount of memory allocated and the number of GC heap allocations is pretty significant.
+The raw performance difference is not that marked: 30 microseconds (for writing 128 entries) is neither here nor there. But the
+difference in the amount of memory allocated and the number of GC heap allocations is pretty significant.
 
 ### Additional notes
 
