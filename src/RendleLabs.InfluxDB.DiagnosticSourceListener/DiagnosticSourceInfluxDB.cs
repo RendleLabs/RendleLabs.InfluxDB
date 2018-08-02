@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace RendleLabs.InfluxDB.DiagnosticSourceListener
 {
@@ -11,14 +12,15 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
     {
         private readonly Func<string, bool> _sourceNamePredicate;
         private readonly IInfluxDBClient _client;
-        private readonly Func<string, string> _nameFixer;
         private readonly ConcurrentBag<DiagnosticListenerObserver> _observers = new ConcurrentBag<DiagnosticListenerObserver>();
+        private readonly DiagnosticListenerOptions _listenerOptions;
 
-        private DiagnosticSourceInfluxDB(IInfluxDBClient client, Func<string, bool> sourceNamePredicate, Func<string, string> nameFixer = null)
+        private DiagnosticSourceInfluxDB(IInfluxDBClient client, Func<string, bool> sourceNamePredicate, Action<DiagnosticListenerOptions> optionsCallback)
         {
             _sourceNamePredicate = sourceNamePredicate;
             _client = client;
-            _nameFixer = nameFixer ?? (name => name.Replace('.', '_'));
+            _listenerOptions = new DiagnosticListenerOptions();
+            optionsCallback?.Invoke(_listenerOptions);
         }
 
         public void OnCompleted()
@@ -34,7 +36,7 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
         {
             if (_sourceNamePredicate(value.Name))
             {
-                _observers.Add(new DiagnosticListenerObserver(value, _client, _nameFixer));
+                _observers.Add(new DiagnosticListenerObserver(value, _client, _listenerOptions));
             }
         }
 
@@ -42,6 +44,7 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
         /// <summary>
         /// Dispose of all subscriptions.
         /// </summary>
+        [SuppressMessage("ReSharper", "ERP022")]
         public void Dispose()
         {
             while (_observers.TryTake(out var subscription))
@@ -62,10 +65,10 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
         /// </summary>
         /// <param name="client">The <see cref="IInfluxDBClient"/> to write data to.</param>
         /// <param name="sourceNamePredicate">A predicate to match <see cref="DiagnosticSource"/> names.</param>
-        /// <param name="nameFixer">(Optional) A function to mutate names, e.g. to convert dotted names to underscored.</param>
-        public static IDisposable Listen(IInfluxDBClient client, Func<string, bool> sourceNamePredicate, Func<string, string> nameFixer = null)
+        /// <param name="optionsCallback">Configuration callback</param>
+        public static IDisposable Listen(IInfluxDBClient client, Func<string, bool> sourceNamePredicate, Action<DiagnosticListenerOptions> optionsCallback = null)
         {
-            var listener = new DiagnosticSourceInfluxDB(client, sourceNamePredicate, nameFixer);
+            var listener = new DiagnosticSourceInfluxDB(client, sourceNamePredicate, optionsCallback);
             DiagnosticListener.AllListeners.Subscribe(listener);
             return listener;
         }

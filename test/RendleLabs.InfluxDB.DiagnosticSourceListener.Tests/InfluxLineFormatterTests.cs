@@ -11,10 +11,10 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener.Tests
         public void WritesTagsAndFields()
         {
             var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            var expected = $"test,tag=foo foo=42 {now}\n";
+            var expected = $"test,tag=foo foo=42i {now}\n";
             
             var obj = new {tag = "foo", foo = 42};
-            var formatter = new InfluxLineFormatter("test", obj.GetType());
+            var formatter = new InfluxLineFormatter("test", obj.GetType(), null, null);
 
             var memory = ArrayPool<byte>.Shared.Rent(1024);
             var span = memory.AsSpan();
@@ -28,10 +28,10 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener.Tests
         public void WritesJustFields()
         {
             var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            var expected = $"test foo=42 {now}\n";
+            var expected = $"test foo=42i {now}\n";
             
             var obj = new {foo = 42};
-            var formatter = new InfluxLineFormatter("test", obj.GetType());
+            var formatter = new InfluxLineFormatter("test", obj.GetType(), null, null);
 
             var memory = ArrayPool<byte>.Shared.Rent(1024);
             var span = memory.AsSpan();

@@ -10,19 +10,19 @@ namespace RendleLabs.InfluxDB.Performance
     [MemoryDiagnoser]
     public class FormatterBenchmark
     {
-        private static readonly InfluxLineFormatterCollection Formatters = new InfluxLineFormatterCollection("perf", s => s);
+        private static readonly InfluxLineFormatterCollection Formatters = new InfluxLineFormatterCollection("perf", new DiagnosticListenerOptions());
         private static readonly byte[] Buffer = new byte[1024];
-        private Args[] args;
+        private Args[] _args;
 
         [Benchmark]
         public int[] LineFormatter()
         {
-            var values = new int[args.Length];
+            var values = new int[_args.Length];
 
-            for (int i = 0; i < args.Length; i++)
+            for (int i = 0; i < _args.Length; i++)
             {
-                var formatter = Formatters.GetOrAdd("perf", args[i].GetType());
-                formatter.TryWrite(Buffer.AsSpan(), args[i], DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), out int written);
+                var formatter = Formatters.GetOrAdd("perf", _args[i].GetType());
+                formatter.TryWrite(Buffer.AsSpan(), _args[i], DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), out int written);
                 values[i] = written;
             }
 
@@ -32,13 +32,13 @@ namespace RendleLabs.InfluxDB.Performance
         [Benchmark]
         public PointData[] PointData()
         {
-            var values = new PointData[args.Length];
-            for (int i = 0; i < args.Length; i++)
+            var values = new PointData[_args.Length];
+            for (int i = 0; i < _args.Length; i++)
             {
-                var reflector = ReflectorCollection.GetOrAdd("perf", args[i].GetType());
+                var reflector = ReflectorCollection.GetOrAdd("perf", _args[i].GetType());
                 var fields = new Dictionary<string, object>();
                 var tags = new Dictionary<string, string>();
-                reflector.Reflect(args[i], fields, tags);
+                reflector.Reflect(_args[i], fields, tags);
                 values[i] = new PointData("perf", fields, tags, DateTime.UtcNow);
             }
 
@@ -48,7 +48,7 @@ namespace RendleLabs.InfluxDB.Performance
         [GlobalSetup]
         public void GlobalSetup()
         {
-            args = GenerateArgs();
+            _args = GenerateArgs();
         }
 
         private static Args[] GenerateArgs()
@@ -58,9 +58,13 @@ namespace RendleLabs.InfluxDB.Performance
         }
     }
 
+    // ReSharper disable InconsistentNaming
+    // ReSharper disable UnusedAutoPropertyAccessor.Global
     public class Args
     {
         public double value { get; set; }
         public string tag { get; set; }
     }
+    // ReSharper restore InconsistentNaming
+    // ReSharper restore UnusedAutoPropertyAccessor.Global
 }

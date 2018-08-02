@@ -15,13 +15,12 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
         private readonly Action<DiagnosticListener, Exception> _onError;
         private readonly IDisposable _subscription;
 
-        internal DiagnosticListenerObserver(DiagnosticListener listener, IInfluxDBClient client, Func<string, string> nameFixer = null,
-            Action<DiagnosticListener, Exception> onError = null)
+        internal DiagnosticListenerObserver(DiagnosticListener listener, IInfluxDBClient client, DiagnosticListenerOptions options)
         {
             _listener = listener;
             _client = client;
-            _formatters = new InfluxLineFormatterCollection(listener.Name, nameFixer);
-            _onError = onError;
+            _formatters = new InfluxLineFormatterCollection(listener.Name, options);
+            _onError = options.OnError;
             _subscription = listener.Subscribe(this);
         }
 

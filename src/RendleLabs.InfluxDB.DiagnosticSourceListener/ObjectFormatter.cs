@@ -1,25 +1,83 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace RendleLabs.InfluxDB.DiagnosticSourceListener
 {
+    using CustomDict = Dictionary<(string, Type), Func<PropertyInfo, IFormatter>>;
+    
     internal sealed class ObjectFormatter
     {
-        private const byte Comma = 44;
-        private const byte Space = 32;
+        private const byte Space = (byte) ' ';
 
-        private readonly FieldFormatter[] _fieldFormatters;
+        private readonly IFormatter[] _fieldFormatters;
         private readonly int _fieldCount;
-        private readonly TagFormatter[] _tagFormatters;
+        private readonly IFormatter[] _tagFormatters;
         private readonly int _tagCount;
 
-        public ObjectFormatter(Type type)
+        public ObjectFormatter(Type type, CustomDict customFieldFormatters, CustomDict customTagFormatters)
         {
-            var fieldFormatters = new List<FieldFormatter>();
-            var tagFormatters = new List<TagFormatter>();
+            var (fieldFormatters, tagFormatters) = CreateFormatters(type, customFieldFormatters, customTagFormatters);
+
+            _fieldFormatters = fieldFormatters.ToArray();
+            _fieldCount = _fieldFormatters.Length;
+            _tagFormatters = tagFormatters.ToArray();
+            _tagCount = _tagFormatters.Length;
+        }
+
+        public bool Write(object args, Span<byte> span, out int bytesWritten)
+        {
+            if (span.Length == 0) goto fail;
+
+            bytesWritten = 0;
+
+            for (int i = 0; i < _tagCount; i++)
+            {
+                if (span.Length == 0) goto fail;
+
+                if (!_tagFormatters[i].TryWrite(args, span, true, out int tagWritten)) goto fail;
+
+                span = span.Slice(tagWritten);
+                bytesWritten += tagWritten;
+            }
+
+
+            span[0] = Space;
+            span = span.Slice(1);
+            bytesWritten++;
+
+            bool comma = false;
+            for (int i = 0; i < _fieldCount; i++)
+            {
+                if (span.Length == 0) goto fail;
+
+                if (!_fieldFormatters[i].TryWrite(args, span, comma, out int fieldWritten)) goto fail;
+
+                span = span.Slice(fieldWritten);
+                bytesWritten += fieldWritten;
+                comma = comma || fieldWritten > 0;
+            }
+
+            return true;
+
+            fail:
+            bytesWritten = 0;
+            return false;
+        }
+
+        private static (List<IFormatter> fieldFormatters, List<IFormatter> tagFormatters) CreateFormatters(Type type,
+            CustomDict customFieldFormatters, CustomDict customTagFormatters)
+        {
+            var fieldFormatters = new List<IFormatter>();
+            var tagFormatters = new List<IFormatter>();
             foreach (var property in type.GetProperties().Where(p => p.CanRead))
             {
+                if (CheckCustomFormatters(customFieldFormatters, customTagFormatters, property, fieldFormatters, tagFormatters))
+                {
+                    continue;
+                }
+
                 if (FieldFormatter.IsFieldType(property.PropertyType))
                 {
                     var formatter = FieldFormatter.TryCreate(property);
@@ -38,54 +96,27 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
                 }
             }
 
-            _fieldFormatters = fieldFormatters.ToArray();
-            _fieldCount = _fieldFormatters.Length;
-            _tagFormatters = tagFormatters.ToArray();
-            _tagCount = _tagFormatters.Length;
+            return (fieldFormatters, tagFormatters);
         }
 
-        public bool Write(object args, ref Span<byte> span, out int bytesWritten)
+        private static bool CheckCustomFormatters(CustomDict customFieldFormatters, CustomDict customTagFormatters, PropertyInfo property,
+            List<IFormatter> fieldFormatters, List<IFormatter> tagFormatters)
         {
-            if (span.Length == 0) goto fail;
+            bool custom = false;
 
-            bytesWritten = 0;
-
-            for (int i = 0; i < _tagCount; i++)
+            if (customFieldFormatters != null && customFieldFormatters.TryGetValue((property.Name, property.PropertyType), out var cf))
             {
-                if (span.Length == 0) goto fail;
-
-                if (!_tagFormatters[i].TryWrite(args, ref span, out int tagWritten)) goto fail;
-
-                bytesWritten += tagWritten;
+                fieldFormatters.Add(cf(property));
+                custom = true;
             }
 
-
-            span[0] = Space;
-            span = span.Slice(1);
-            bytesWritten++;
-
-            bool comma = false;
-            for (int i = 0; i < _fieldCount; i++)
+            if (customTagFormatters != null && customTagFormatters.TryGetValue((property.Name, property.PropertyType), out cf))
             {
-                if (span.Length == 0) goto fail;
-                
-                if (comma)
-                {
-                    span[0] = Comma;
-                    span = span.Slice(1);
-                    bytesWritten++;
-                }
-
-                if (!_fieldFormatters[i].TryWrite(args, ref span, out int fieldWritten)) goto fail;
-
-                bytesWritten += fieldWritten;
-                comma = comma || fieldWritten > 0;
+                tagFormatters.Add(cf(property));
+                custom = true;
             }
-            return true;
 
-            fail:
-            bytesWritten = 0;
-            return false;
+            return custom;
         }
     }
 }

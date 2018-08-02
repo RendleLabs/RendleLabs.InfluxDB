@@ -1,7 +1,6 @@
 using System;
 using System.Text;
 using System.Threading.Tasks;
-using RendleLabs.InfluxDB;
 
 namespace RendleLabs.InfluxDB.DiagnosticSourceListener.Tests
 {

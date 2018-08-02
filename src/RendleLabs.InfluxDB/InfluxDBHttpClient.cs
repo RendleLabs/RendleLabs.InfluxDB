@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace RendleLabs.InfluxDB
 {
     internal class InfluxDBHttpClient : IInfluxDBHttpClient
     {
-        private static readonly ConcurrentDictionary<Uri, InfluxDBHttpClient> _clients = new ConcurrentDictionary<Uri, InfluxDBHttpClient>();
+        private static readonly ConcurrentDictionary<Uri, InfluxDBHttpClient> Clients = new ConcurrentDictionary<Uri, InfluxDBHttpClient>();
         private readonly HttpClient _client;
 
         private InfluxDBHttpClient(Uri serverUri)
@@ -23,14 +21,14 @@ namespace RendleLabs.InfluxDB
         public async Task Write(byte[] data, int size, string path)
         {
             var content = new ByteArrayContent(data, 0, size);
-            var responseMessage = await _client.PostAsync(path, content).ConfigureAwait(false);
+            await _client.PostAsync(path, content).ConfigureAwait(false);
         }
 
         public static InfluxDBHttpClient Get(string serverUrl) => Get(new Uri(serverUrl));
 
         public static InfluxDBHttpClient Get(Uri serverUri)
         {
-            return _clients.GetOrAdd(serverUri, uri => new InfluxDBHttpClient(uri));
+            return Clients.GetOrAdd(serverUri, uri => new InfluxDBHttpClient(uri));
         }
     }
 }

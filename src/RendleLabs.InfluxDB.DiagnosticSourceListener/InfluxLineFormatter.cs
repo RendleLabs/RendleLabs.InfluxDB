@@ -1,5 +1,7 @@
 using System;
 using System.Buffers.Text;
+using System.Collections.Generic;
+using System.Reflection;
 
 namespace RendleLabs.InfluxDB.DiagnosticSourceListener
 {
@@ -13,23 +15,25 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
         private readonly ObjectFormatter _objectFormatter;
 
 
-        internal InfluxLineFormatter(string measurement, Type argsType)
+        internal InfluxLineFormatter(string measurement, Type argsType, Dictionary<(string, Type), Func<PropertyInfo, IFormatter>> customFieldFormatters,
+            Dictionary<(string, Type), Func<PropertyInfo, IFormatter>> customTagFormatters)
         {
             _measurement = InfluxName.Escape(measurement);
             _measurementLength = _measurement.Length;
-            _objectFormatter = new ObjectFormatter(argsType);
+            _objectFormatter = new ObjectFormatter(argsType, customFieldFormatters, customTagFormatters);
         }
 
         public bool TryWrite(Span<byte> span, object args, long requestTimestamp, out int bytesWritten)
         {
             _measurement.CopyTo(span);
             span = span.Slice(_measurementLength);
-            if (!_objectFormatter.Write(args, ref span, out int written) || span.Length == 0)
+            if (!_objectFormatter.Write(args, span, out int written) || span.Length == 0)
             {
                 bytesWritten = 0;
                 return false;
             }
 
+            span = span.Slice(written);
             span[0] = Space;
             span = span.Slice(1);
             

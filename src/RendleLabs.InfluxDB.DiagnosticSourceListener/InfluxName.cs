@@ -15,7 +15,6 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
             char[] chars = name.ToCharArray();
             int byteCount = Encoding.UTF8.GetByteCount(chars);
             byte[] bytes = new byte[byteCount * 2];
-            char[] ch = new char[1];
             int index = 0;
             for (int i = 0; i < chars.Length; i++)
             {
