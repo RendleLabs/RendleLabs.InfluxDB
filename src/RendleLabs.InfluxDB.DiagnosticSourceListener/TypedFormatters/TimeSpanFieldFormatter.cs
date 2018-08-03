@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace RendleLabs.InfluxDB.DiagnosticSourceListener.TypedFormatters
 {
-    internal class TimeSpanFieldFormatter : StructFieldFormatter<TimeSpan>, IFormatter
+    internal class TimeSpanFieldFormatter : TypedFormatter<TimeSpan>, IFormatter
     {
         public TimeSpanFieldFormatter(PropertyInfo property) : base(property)
         {

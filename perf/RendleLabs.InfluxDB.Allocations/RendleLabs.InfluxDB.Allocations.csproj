@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net461</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Memory" Version="4.5.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\RendleLabs.InfluxDB.DiagnosticSourceListener\RendleLabs.InfluxDB.DiagnosticSourceListener.csproj" />
+    <ProjectReference Include="..\..\src\RendleLabs.InfluxDB\RendleLabs.InfluxDB.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -11,18 +11,19 @@ namespace RendleLabs.InfluxDB.Performance
     public class FormatterBenchmark
     {
         private static readonly InfluxLineFormatterCollection Formatters = new InfluxLineFormatterCollection("perf", new DiagnosticListenerOptions());
-        private static readonly byte[] Buffer = new byte[1024];
-        private Args[] _args;
+        private static readonly byte[] Buffer = new byte[8192];
+        private Args[] _args128;
+        private Args[] _args1024;
 
         [Benchmark]
-        public int[] LineFormatter()
+        public int[] LineFormatter128()
         {
-            var values = new int[_args.Length];
+            var values = new int[_args128.Length];
 
-            for (int i = 0; i < _args.Length; i++)
+            for (int i = 0; i < _args128.Length; i++)
             {
-                var formatter = Formatters.GetOrAdd("perf", _args[i].GetType());
-                formatter.TryWrite(Buffer.AsSpan(), _args[i], DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), out int written);
+                var formatter = Formatters.GetOrAdd("perf", _args128[i].GetType());
+                formatter.TryWrite(Buffer.AsSpan(), _args128[i], DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), out int written);
                 values[i] = written;
             }
 
@@ -30,31 +31,62 @@ namespace RendleLabs.InfluxDB.Performance
         }
 
         [Benchmark]
-        public PointData[] PointData()
+        public PointData[] PointData128()
         {
-            var values = new PointData[_args.Length];
-            for (int i = 0; i < _args.Length; i++)
+            var values = new PointData[_args128.Length];
+            for (int i = 0; i < _args128.Length; i++)
             {
-                var reflector = ReflectorCollection.GetOrAdd("perf", _args[i].GetType());
+                var reflector = ReflectorCollection.GetOrAdd("perf", _args128[i].GetType());
                 var fields = new Dictionary<string, object>();
                 var tags = new Dictionary<string, string>();
-                reflector.Reflect(_args[i], fields, tags);
+                reflector.Reflect(_args128[i], fields, tags);
                 values[i] = new PointData("perf", fields, tags, DateTime.UtcNow);
             }
 
             return values;
         }
 
+        [Benchmark]
+        public int[] LineFormatter1024()
+        {
+            var values = new int[_args1024.Length];
+
+            for (int i = 0; i < _args1024.Length; i++)
+            {
+                var formatter = Formatters.GetOrAdd("perf", _args1024[i].GetType());
+                formatter.TryWrite(Buffer.AsSpan(), _args1024[i], DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), out int written);
+                values[i] = written;
+            }
+
+            return values;
+        }
+
+        [Benchmark]
+        public PointData[] PointData1024()
+        {
+            var values = new PointData[_args1024.Length];
+            for (int i = 0; i < _args1024.Length; i++)
+            {
+                var reflector = ReflectorCollection.GetOrAdd("perf", _args1024[i].GetType());
+                var fields = new Dictionary<string, object>();
+                var tags = new Dictionary<string, string>();
+                reflector.Reflect(_args1024[i], fields, tags);
+                values[i] = new PointData("perf", fields, tags, DateTime.UtcNow);
+            }
+
+            return values;
+        }
         [GlobalSetup]
         public void GlobalSetup()
         {
-            _args = GenerateArgs();
+            _args128 = GenerateArgs(128);
+            _args1024 = GenerateArgs(1024);
         }
 
-        private static Args[] GenerateArgs()
+        private static Args[] GenerateArgs(int howMany)
         {
             var random = new Random(42);
-            return Enumerable.Range(0, 128).Select(i => new Args {value = random.NextDouble(), tag = $"benchmark_{i}"}).ToArray();
+            return Enumerable.Range(0, howMany).Select(i => new Args {value = random.NextDouble(), tag = $"benchmark_{i}"}).ToArray();
         }
     }
 

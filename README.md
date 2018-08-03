@@ -16,9 +16,11 @@ The official client exposes a `PointData` type which takes two `IReadOnlyDiction
 to new `Dictionary` instances in the constructor. So the benchmark compares constructing `PointData` instances to using the
 `InfluxLineFormatter` to write directly to a `Span<byte>`.
 
+The benchmark code writes 128 
+
 Results from the benchmark:
 
-`LineFormatter` is this project. `PointData` is the official client.
+`LineFormatter` is this project. `PointData` is the official client, run with 128 items and 1024 items for each.
 
 ``` ini
 
@@ -30,13 +32,16 @@ Intel Core i7-4770K CPU 3.50GHz (Haswell), 1 CPU, 8 logical and 4 physical cores
 
 
 ```
-|        Method |      Mean |     Error |    StdDev |   Gen 0 |  Gen 1 | Allocated |
-|-------------- |----------:|----------:|----------:|--------:|-------:|----------:|
-| LineFormatter |  99.08 us | 0.6337 us | 0.5927 us |  6.9580 |      - |  28.52 KB |
-|     PointData | 129.67 us | 1.1886 us | 1.0537 us | 34.4238 | 0.2441 | 141.02 KB |
+|            Method |        Mean |      Error |     StdDev |      Median |    Gen 0 |   Gen 1 |  Allocated |
+|------------------ |------------:|-----------:|-----------:|------------:|---------:|--------:|-----------:|
+|  LineFormatter128 |    60.76 us |  0.4592 us |  0.4295 us |    60.69 us |   5.0049 |       - |   20.52 KB |
+|      PointData128 |   128.14 us |  1.4037 us |  1.3130 us |   127.47 us |  34.4238 |  0.9766 |  141.02 KB |
+| LineFormatter1024 |   493.18 us |  4.7369 us |  4.1991 us |   493.09 us |  39.0625 |       - |  163.98 KB |
+|     PointData1024 | 1,204.12 us | 25.6625 us | 48.8256 us | 1,181.42 us | 183.5938 | 91.7969 | 1128.02 KB |
 
-The raw performance difference is not that marked: 30 microseconds (for writing 128 entries) is neither here nor there. But the
-difference in the amount of memory allocated and the number of GC heap allocations is pretty significant.
+`LineFormatter` is significantly faster, with more than double the throughput, and only 15% of the memory usage and allocations.
+I'm not quite sure where those allocations are happening, tbh, because once the Formatter is created, it should be allocation free
+from then on. I'm doing some profiling to try and track those down.
 
 ### Additional notes
 
@@ -44,7 +49,7 @@ In the official client, once these `PointData` instances have been constructed, 
 is, and then used to create a `System.Net.Http.StringContent` via a process which involves creating a lot of intermediate strings.
 That all happens on top of the benchmarked code above.
 
-This project is using pooled `byte[]` arrays and writing directly to them from the benchmarked code, so once a buffer is full or the
+This project is using pooled `byte[]` arrays and writing directly to them from the instrumentation code, so once a buffer is full or the
 batch interval is hit, that array is just wrapped in a `System.Net.Http.ByteArrayContent` and posted; no further processing or
 allocations are necessary. As noted before, it's hard to benchmark that effectively, but maybe at some point I'll try to profile it with
 dotTrace/dotMemory or maybe ANTS in a real application.

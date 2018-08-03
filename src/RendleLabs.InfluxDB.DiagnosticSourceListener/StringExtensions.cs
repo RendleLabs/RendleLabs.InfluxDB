@@ -32,9 +32,7 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
         private static bool FastWriteString(Span<byte> span, int length, string str, out int bytesWritten)
         {
             var written = length;
-            var buffer = ArrayPool<byte>.Shared.Rent(length);
 
-            Encoding.UTF8.GetBytes(str, 0, str.Length, buffer, 0);
             for (int i = 0; i < length; i++)
             {
                 if (span.Length == 0)
@@ -43,7 +41,9 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
                     return false;
                 }
 
-                switch (buffer[i])
+                byte ch = (byte) str[i];
+
+                switch (ch)
                 {
                     case Space:
                     case Comma:
@@ -56,7 +56,7 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
 
                 if (span.Length > 0)
                 {
-                    span[0] = buffer[i];
+                    span[0] = ch;
                     span = span.Slice(1);
                 }
             }

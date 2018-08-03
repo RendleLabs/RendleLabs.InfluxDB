@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace RendleLabs.InfluxDB.DiagnosticSourceListener.TypedFormatters
 {
-    internal class DecimalFieldFormatter : StructFieldFormatter<decimal>, IFormatter
+    internal class DecimalFieldFormatter : TypedFormatter<decimal>, IFormatter
     {
         public DecimalFieldFormatter(PropertyInfo property) : base(property)
         {

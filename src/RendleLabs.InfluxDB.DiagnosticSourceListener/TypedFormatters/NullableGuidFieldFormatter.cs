@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace RendleLabs.InfluxDB.DiagnosticSourceListener.TypedFormatters
 {
-    internal class NullableGuidFieldFormatter : StructFieldFormatter<Guid?>, IFormatter
+    internal class NullableGuidFieldFormatter : TypedFormatter<Guid?>, IFormatter
     {
         public NullableGuidFieldFormatter(PropertyInfo property) : base(property)
         {

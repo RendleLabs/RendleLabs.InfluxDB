@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace RendleLabs.InfluxDB.DiagnosticSourceListener.TypedFormatters
 {
-    internal class DoubleFieldFormatter : StructFieldFormatter<double>, IFormatter
+    internal class DoubleFieldFormatter : TypedFormatter<double>, IFormatter
     {
         public DoubleFieldFormatter(PropertyInfo property) : base(property)
         {

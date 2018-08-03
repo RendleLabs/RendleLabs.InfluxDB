@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace RendleLabs.InfluxDB.DiagnosticSourceListener.TypedFormatters
 {
-    internal class SByteFieldFormatter : StructFieldFormatter<sbyte>, IFormatter
+    internal class SByteFieldFormatter : TypedFormatter<sbyte>, IFormatter
     {
         public SByteFieldFormatter(PropertyInfo property) : base(property)
         {
