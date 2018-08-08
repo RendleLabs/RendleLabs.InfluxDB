@@ -43,6 +43,12 @@ Intel Core i7-4770K CPU 3.50GHz (Haswell), 1 CPU, 8 logical and 4 physical cores
 I'm not quite sure where those allocations are happening, tbh, because once the Formatter is created, it should be allocation free
 from then on. I'm doing some profiling to try and track those down.
 
+Also notice with the `PointData` code with 1024 items, we start to get a lot of objects moving to `Gen 1`, which we should
+try to avoid in hot-path code. All of `LineFormatter`'s heap-allocated objects are created for the lifetime of the application,
+so they should just end up in `Gen 2` and not get in anybody's way.
+
+(**Aside:** why isn't there a separate heap for objects that will never be collected until the process exits?)
+
 ### Additional notes
 
 In the official client, once these `PointData` instances have been constructed, they get buffered for however long the batch interval
