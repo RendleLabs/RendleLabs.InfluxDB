@@ -7,11 +7,15 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
 {
     public class DiagnosticListenerOptions
     {
+        private readonly DefaultTags _defaultTags = new DefaultTags();
+        
         public Dictionary<(string, Type), Func<PropertyInfo, IFormatter>> CustomFieldFormatters { get; } = new Dictionary<(string, Type), Func<PropertyInfo, IFormatter>>();
         public Dictionary<(string, Type), Func<PropertyInfo, IFormatter>> CustomTagFormatters { get; } = new Dictionary<(string, Type), Func<PropertyInfo, IFormatter>>();
         
         public Func<string, string> NameFixer { get; set; }
         public Action<DiagnosticListener, Exception> OnError { get; set; }
+
+        public byte[] DefaultTags => _defaultTags.Bytes;
 
         public void AddCustomFieldFormatter(string propertyName, Type propertyType, Func<PropertyInfo, IFormatter> formatter)
         {
@@ -32,6 +36,11 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
             if (propertyName == null) throw new ArgumentNullException(nameof(propertyName));
             if (propertyType == null) throw new ArgumentNullException(nameof(propertyType));
             CustomTagFormatters[(propertyName, propertyType)] = formatter ?? throw new ArgumentNullException(nameof(formatter));
+        }
+
+        public void AddDefaultTag(string name, string value)
+        {
+            _defaultTags.Add(name, value);
         }
     }
 }

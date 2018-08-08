@@ -4,6 +4,19 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Version>1.0.0-beta1</Version>
+    <PackageId>RendleLabs.InfluxDB.DiagnosticSourceListener</PackageId>
+    <Title>RendleLabs.InfluxDB.DiagnosticSourceListener</Title>
+    <Authors>Mark</Authors>
+    <Description>Library for listening to System.Diagnostics.DiagnosticSource and writing to InfluxDB.</Description>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageReleaseNotes>First release</PackageReleaseNotes>
+    <Copyright>Copyright (C) 2018 RendleLabs.</Copyright>
+    <PackageTags>influxdb</PackageTags>
+    <PackageProjectUrl>https://github.com/RendleLabs/RendleLabs.InfluxDB</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/RendleLabs/RendleLabs.InfluxDB/blob/master/LICENSE</PackageLicenseUrl>
+    <RepositoryUrl>https://github.com/RendleLabs/RendleLabs.InfluxDB</RepositoryUrl>
+    <PackageOutputPath>..\..\artifacts\$(Configuration)</PackageOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
