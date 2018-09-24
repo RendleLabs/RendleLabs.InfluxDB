@@ -19,5 +19,10 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener.Tests
             Path = path;
             return Task.CompletedTask;
         }
+
+        public void Dispose()
+        {
+            
+        }
     }
 }

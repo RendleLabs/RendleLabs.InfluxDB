@@ -30,5 +30,10 @@ namespace RendleLabs.InfluxDB
         {
             return Clients.GetOrAdd(serverUri, uri => new InfluxDBHttpClient(uri));
         }
+
+        public void Dispose()
+        {
+            _client?.Dispose();
+        }
     }
 }

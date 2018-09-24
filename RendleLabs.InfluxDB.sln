@@ -19,6 +19,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RendleLabs.InfluxDB.Perform
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RendleLabs.InfluxDB.Allocations", "perf\RendleLabs.InfluxDB.Allocations\RendleLabs.InfluxDB.Allocations.csproj", "{11722196-F24C-4661-BF1A-BAF3A638A29E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RendleLabs.InfluxDB.IntegrationTests", "test\RendleLabs.InfluxDB.IntegrationTests\RendleLabs.InfluxDB.IntegrationTests.csproj", "{8097031A-F8CB-4C7C-82DD-F29625DFE4CE}"
+EndProject
 Global
 	GlobalSection(Performance) = preSolution
 		HasPerformanceSessions = true
@@ -92,6 +94,18 @@ Global
 		{11722196-F24C-4661-BF1A-BAF3A638A29E}.Release|x64.Build.0 = Release|Any CPU
 		{11722196-F24C-4661-BF1A-BAF3A638A29E}.Release|x86.ActiveCfg = Release|Any CPU
 		{11722196-F24C-4661-BF1A-BAF3A638A29E}.Release|x86.Build.0 = Release|Any CPU
+		{8097031A-F8CB-4C7C-82DD-F29625DFE4CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8097031A-F8CB-4C7C-82DD-F29625DFE4CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8097031A-F8CB-4C7C-82DD-F29625DFE4CE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8097031A-F8CB-4C7C-82DD-F29625DFE4CE}.Debug|x64.Build.0 = Debug|Any CPU
+		{8097031A-F8CB-4C7C-82DD-F29625DFE4CE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{8097031A-F8CB-4C7C-82DD-F29625DFE4CE}.Debug|x86.Build.0 = Debug|Any CPU
+		{8097031A-F8CB-4C7C-82DD-F29625DFE4CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8097031A-F8CB-4C7C-82DD-F29625DFE4CE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8097031A-F8CB-4C7C-82DD-F29625DFE4CE}.Release|x64.ActiveCfg = Release|Any CPU
+		{8097031A-F8CB-4C7C-82DD-F29625DFE4CE}.Release|x64.Build.0 = Release|Any CPU
+		{8097031A-F8CB-4C7C-82DD-F29625DFE4CE}.Release|x86.ActiveCfg = Release|Any CPU
+		{8097031A-F8CB-4C7C-82DD-F29625DFE4CE}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -102,6 +116,7 @@ Global
 		{DB3EFE73-739B-464F-B238-1EE00A5F3F15} = {2C2DA860-5D3A-4C26-B90C-67105D955079}
 		{97882BA3-CA2D-496C-96EF-EC681B0041DF} = {C1222A1C-60F3-45FD-8CF0-748D19AAE422}
 		{11722196-F24C-4661-BF1A-BAF3A638A29E} = {C1222A1C-60F3-45FD-8CF0-748D19AAE422}
+		{8097031A-F8CB-4C7C-82DD-F29625DFE4CE} = {DC0BD70D-279A-429E-BAEB-D120DC40038F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {23143CAE-3633-4FEE-8F64-1597FCB56EFA}

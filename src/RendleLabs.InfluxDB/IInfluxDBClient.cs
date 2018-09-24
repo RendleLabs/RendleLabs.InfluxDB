@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 
 namespace RendleLabs.InfluxDB
@@ -5,7 +6,7 @@ namespace RendleLabs.InfluxDB
     /// <summary>
     /// Provides a single threaded mechanism to write data to InfluxDB
     /// </summary>
-    public interface IInfluxDBClient
+    public interface IInfluxDBClient : IDisposable
     {
         /// <summary>
         /// Try to add a <see cref="WriteRequest"/> to the queue.

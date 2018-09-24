@@ -19,6 +19,7 @@ namespace RendleLabs.InfluxDB
         private readonly CancellationTokenSource _cancellationTokenSource;
         private readonly TimeSpan _forceFlushInterval;
         private readonly Timer _timer;
+        private bool _isDisposed;
         private byte[] _memory;
         private int _size;
         private int _bufferSize;
@@ -155,7 +156,10 @@ namespace RendleLabs.InfluxDB
                 oldSize = _size;
                 _memory = ArrayPool<byte>.Shared.Rent(_bufferSize);
                 _size = 0;
-                _timer?.Change(_forceFlushInterval, _forceFlushInterval);
+                if (!_isDisposed)
+                {
+                    _timer?.Change(_forceFlushInterval, _forceFlushInterval);
+                }
             }
 
             Send(oldBuffer, oldSize);
@@ -182,6 +186,7 @@ namespace RendleLabs.InfluxDB
 
         public async void Dispose()
         {
+            _isDisposed = true;
             await FlushAsync();
         }
 
