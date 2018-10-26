@@ -18,10 +18,20 @@ namespace RendleLabs.InfluxDB
             };
         }
 
-        public async Task Write(byte[] data, int size, string path)
+        internal InfluxDBHttpClient(HttpClient client)
+        {
+            _client = client;
+        }
+
+        public Task Write(byte[] data, int size, string path)
         {
             var content = new ByteArrayContent(data, 0, size);
-            await _client.PostAsync(path, content).ConfigureAwait(false);
+            return _client.PostAsync(path, content);
+        }
+
+        public Task Write(HttpContent content, string path)
+        {
+            return _client.PostAsync(path, content);
         }
 
         public static InfluxDBHttpClient Get(string serverUrl) => Get(new Uri(serverUrl));
