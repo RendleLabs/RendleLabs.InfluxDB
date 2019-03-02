@@ -23,7 +23,7 @@ namespace RendleLabs.InfluxDB.Performance
             for (int i = 0; i < _args128.Length; i++)
             {
                 var formatter = Formatters.GetOrAdd("perf", _args128[i].GetType());
-                formatter.TryWrite(Buffer.AsSpan(), _args128[i], DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), out int written);
+                formatter.TryWrite(Buffer.AsSpan(), _args128[i], null, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), out int written);
                 values[i] = written;
             }
 
@@ -54,7 +54,7 @@ namespace RendleLabs.InfluxDB.Performance
             for (int i = 0; i < _args1024.Length; i++)
             {
                 var formatter = Formatters.GetOrAdd("perf", _args1024[i].GetType());
-                formatter.TryWrite(Buffer.AsSpan(), _args1024[i], DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), out int written);
+                formatter.TryWrite(Buffer.AsSpan(), _args1024[i], null, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), out int written);
                 values[i] = written;
             }
 

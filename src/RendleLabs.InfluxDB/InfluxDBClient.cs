@@ -120,7 +120,7 @@ namespace RendleLabs.InfluxDB
             }
 
             var span = _memory.AsSpan(_size);
-            if (request.Writer.TryWrite(span, request.Args, request.Timestamp, out int bytesWritten))
+            if (request.Writer.TryWrite(span, request.Args, request.Activity, request.Timestamp, out int bytesWritten))
             {
                 _size += bytesWritten;
                 if (_bufferSize - _size < bytesWritten)

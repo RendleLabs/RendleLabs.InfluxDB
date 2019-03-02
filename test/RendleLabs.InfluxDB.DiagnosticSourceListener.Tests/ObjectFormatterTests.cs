@@ -17,7 +17,7 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener.Tests
 
             var memory = ArrayPool<byte>.Shared.Rent(1024);
             var span = memory.AsSpan();
-            formatter.Write(obj, span, out int written);
+            formatter.Write(obj, null, span, out int written);
             var str = Encoding.UTF8.GetString(memory, 0, written);
             Assert.Equal(expected.Length, written);
             Assert.Equal(expected, str);
@@ -34,7 +34,7 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener.Tests
 
             var memory = ArrayPool<byte>.Shared.Rent(1024);
             var span = memory.AsSpan();
-            formatter.Write(obj, span, out int written);
+            formatter.Write(obj, null, span, out int written);
             var str = Encoding.UTF8.GetString(memory, 0, written);
             Assert.Equal(expected.Length, written);
             Assert.Equal(expected, str);

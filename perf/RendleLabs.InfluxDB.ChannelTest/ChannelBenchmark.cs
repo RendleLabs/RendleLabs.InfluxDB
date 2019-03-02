@@ -29,7 +29,7 @@ namespace RendleLabs.InfluxDB.ChannelTest
                 {
                     var buffer = channel.GetBuffer(size);
                     int bytesWritten;
-                    while (!Formatter.TryWrite(buffer.Span, metric, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), out bytesWritten))
+                    while (!Formatter.TryWrite(buffer.Span, metric, null, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), out bytesWritten))
                     {
                         size = buffer.Grow();
                     }

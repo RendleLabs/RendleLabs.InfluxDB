@@ -35,7 +35,7 @@ namespace RendleLabs.InfluxDB.Allocations
             for (int i = 0; i < args128.Length; i++)
             {
                 var formatter = Formatters.GetOrAdd("perf", args128[i].GetType());
-                formatter.TryWrite(Buffer.AsSpan(), args128[i], DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), out int written);
+                formatter.TryWrite(Buffer.AsSpan(), args128[i], null, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), out int written);
                 values[i] = written;
             }
 
