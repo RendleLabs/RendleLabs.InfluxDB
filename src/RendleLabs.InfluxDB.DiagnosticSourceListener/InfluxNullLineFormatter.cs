@@ -1,42 +1,42 @@
 using System;
 using System.Buffers.Text;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Reflection;
 
 namespace RendleLabs.InfluxDB.DiagnosticSourceListener
 {
-    internal class InfluxLineFormatter : ILineWriter
+    internal class InfluxNullLineFormatter : ILineWriter
     {
-        private const byte Newline = (byte) '\n';
-        private const byte Space = (byte) ' ';
-
+        private const byte Newline = (byte)'\n';
+        private const byte Space = (byte)' ';
+        
         private readonly byte[] _measurement;
         private readonly int _measurementLength;
-        private readonly ObjectFormatter _objectFormatter;
         private readonly byte[] _defaultTags;
         private readonly int _defaultTagsLength;
         private readonly bool _hasDefaultTags;
         private readonly int _baseLength;
 
-        internal InfluxLineFormatter(string measurement, Type argsType,
-            Dictionary<(string, Type), Func<PropertyInfo, IFormatter>> customFieldFormatters,
-            Dictionary<(string, Type), Func<PropertyInfo, IFormatter>> customTagFormatters, byte[] optionsDefaultTags)
+        internal InfluxNullLineFormatter(string measurement, byte[] optionsDefaultTags)
         {
             _measurement = InfluxName.Escape(measurement);
             _measurementLength = _measurement.Length;
-            _objectFormatter = new ObjectFormatter(argsType, customFieldFormatters, customTagFormatters);
             _defaultTags = optionsDefaultTags;
             _hasDefaultTags = _defaultTags != null && (_defaultTagsLength = _defaultTags.Length) > 0;
 
             _baseLength = _measurementLength + _defaultTagsLength + 2;
         }
 
-        public bool TryWrite(Span<byte> span, object args, Activity activity, long requestTimestamp,
-            out int bytesWritten)
+        public bool TryWrite(Span<byte> span, object args, Activity activity, long requestTimestamp, out int bytesWritten)
         {
+            if (span.Length < _measurementLength)
+            {
+                goto fail;
+            }
+
             bytesWritten = _baseLength;
+            
             _measurement.CopyTo(span);
+            
             span = span.Slice(_measurementLength);
 
             if (_hasDefaultTags)
@@ -45,44 +45,57 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
                 {
                     goto fail;
                 }
-
                 _defaultTags.CopyTo(span);
             }
 
             span = span.Slice(_defaultTagsLength);
-
-            if (!_objectFormatter.Write(args, activity, span, out int written) || span.Length == 0)
+            
+            if (activity != null)
             {
-                goto fail;
+                if (!ActivityWriter.TryWriteTags(span, activity.Tags, out int tagsWritten))
+                {
+                    goto fail;
+                }
+
+                bytesWritten += tagsWritten;
             }
 
-            bytesWritten += written;
-
-            span = span.Slice(written);
             span[0] = Space;
             span = span.Slice(1);
+            bytesWritten++;
 
+            if (activity != null && activity.Duration.Ticks > 0L)
+            {
+                if (!ActivityWriter.TryWriteDuration(span, activity.Duration, false, out int durationWritten))
+                {
+                    goto fail;
+                }
+
+                bytesWritten += durationWritten;
+            }
+
+            span[0] = Space;
+            span = span.Slice(1);
+            
             if (!Utf8Formatter.TryFormat(requestTimestamp, span, out int timestampWritten))
             {
                 goto fail;
             }
-
-
-            bytesWritten += timestampWritten;
 
             span = span.Slice(timestampWritten);
             if (span.Length == 0)
             {
                 goto fail;
             }
-
+            
             span[0] = Newline;
-            bytesWritten = _baseLength + written + timestampWritten;
-            
-            LongestWritten = Math.Max(LongestWritten, bytesWritten);
-            
+            bytesWritten = _baseLength + timestampWritten;
+            if (bytesWritten > LongestWritten)
+            {
+                LongestWritten = bytesWritten;
+            }
             return true;
-
+            
             fail:
             bytesWritten = 0;
             return false;
@@ -91,5 +104,3 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
         public int LongestWritten { get; private set; }
     }
 }
-
-    

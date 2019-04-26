@@ -3,14 +3,14 @@ using System.Diagnostics;
 
 namespace RendleLabs.InfluxDB
 {
-    public struct WriteRequest
+    public readonly struct WriteRequest
     {
         internal static WriteRequest FlushRequest = new WriteRequest(true);
-        public ILineWriter Writer { get; }
-        public object Args { get; }
-        public Activity Activity { get; }
-        public long Timestamp { get; }
-        internal bool Flush { get; }
+        public readonly ILineWriter Writer;
+        public readonly object Args;
+        public readonly Activity Activity;
+        public readonly long Timestamp;
+        internal readonly bool Flush;
 
         public WriteRequest(ILineWriter writer, object args, Activity activity = null, DateTimeOffset? timestamp = null)
         {

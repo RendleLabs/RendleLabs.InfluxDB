@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 
@@ -26,7 +27,7 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
             _tagCount = _tagFormatters.Length;
         }
 
-        public bool Write(object args, Span<byte> span, out int bytesWritten)
+        public bool Write(object args, Activity activity, Span<byte> span, out int bytesWritten)
         {
             if (span.Length == 0) goto fail;
 
@@ -42,6 +43,15 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
                 bytesWritten += tagWritten;
             }
 
+            if (activity != null)
+            {
+                if (!ActivityWriter.TryWriteTags(span, activity.Tags, out int tagsWritten))
+                {
+                    goto fail;
+                }
+
+                bytesWritten += tagsWritten;
+            }
 
             span[0] = Space;
             span = span.Slice(1);
@@ -57,6 +67,16 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
                 span = span.Slice(fieldWritten);
                 bytesWritten += fieldWritten;
                 comma = comma || fieldWritten > 0;
+            }
+
+            if (activity != null && activity.Duration.Ticks > 0L)
+            {
+                if (!ActivityWriter.TryWriteDuration(span, activity.Duration, comma, out int durationWritten))
+                {
+                    goto fail;
+                }
+
+                bytesWritten += durationWritten;
             }
 
             return true;

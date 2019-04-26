@@ -19,7 +19,7 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener.Tests
             var objectFormatter = new ObjectFormatter(args.GetType(), cff, null);
             var buffer = new byte[128];
             var span = buffer.AsSpan();
-            Assert.True(objectFormatter.Write(args, span, out int written));
+            Assert.True(objectFormatter.Write(args, null, span, out int written));
             var text = Encoding.UTF8.GetString(buffer, 0, written);
             Assert.Equal(" v=42", text);
         }
@@ -39,7 +39,7 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener.Tests
             var objectFormatter = new ObjectFormatter(args.GetType(), cff, ctf);
             var buffer = new byte[128];
             var span = buffer.AsSpan();
-            Assert.True(objectFormatter.Write(args, span, out int written));
+            Assert.True(objectFormatter.Write(args, null, span, out int written));
             var text = Encoding.UTF8.GetString(buffer, 0, written);
             Assert.Equal(",t=foo v=42", text);
         }

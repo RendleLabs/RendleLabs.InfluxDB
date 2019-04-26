@@ -100,44 +100,38 @@ namespace RendleLabs.InfluxDB
 
         private void ProcessRequest(WriteRequest request)
         {
+            if (request.Flush && _size > 0)
+            {
+                SwapMemoryAndWrite();
+                return;
+            }
+
+            if (_bufferSize - _size < request.Writer.LongestWritten)
+            {
+                SwapMemoryAndWrite();
+            }
+
             try
             {
-                if (request.Flush && _size > 0)
+                var span = _memory.AsSpan(_size);
+
+                if (request.Writer.TryWrite(span, request.Args, request.Activity, request.Timestamp, out int bytesWritten))
                 {
-                    SwapMemoryAndWrite();
+                    _size += bytesWritten;
                     return;
                 }
 
-                var span = _memory.AsSpan(_size);
-
-                if (request.Writer.LongestWritten < span.Length)
-                {
-                    if (request.Writer.TryWrite(span, request.Args, request.Timestamp, out int bytesWritten))
-                    {
-                        _size += bytesWritten;
-
-                        // If there's less space remaining than was just used, write the data out now
-                        if (_bufferSize - _size < bytesWritten)
-                        {
-                            SwapMemoryAndWrite();
-                        }
-
-                        return;
-                    }
-
-                    GrowBuffer();
-                }
-
+                GrowBuffer();
                 SwapMemoryAndWrite();
-
-                // ReSharper disable once TailRecursiveCall
-                // Because this tail call should be eliminated by RyuJIT(?)
-                ProcessRequest(request);
             }
             catch (Exception ex)
             {
                 _errorCallback(ex);
             }
+
+            // ReSharper disable once TailRecursiveCall
+            // Because this tail call should be eliminated by RyuJIT(?)
+            ProcessRequest(request);
         }
 
         private void GrowBuffer()
