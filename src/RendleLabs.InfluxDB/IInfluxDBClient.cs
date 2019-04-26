@@ -15,6 +15,6 @@ namespace RendleLabs.InfluxDB
         /// <returns><c>true</c> if the request is queued successfully, otherwise, <c>false</c>.</returns>
         bool TryRequest(WriteRequest request);
 
-        Task FlushAsync();
+        void Flush();
     }
 }

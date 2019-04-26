@@ -68,11 +68,16 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
             
             span[0] = Newline;
             bytesWritten = _baseLength + written + timestampWritten;
+            
+            LongestWritten = Math.Max(LongestWritten, bytesWritten);
+            
             return true;
             
             fail:
                 bytesWritten = 0;
                 return false;
         }
+
+        public int LongestWritten { get; private set; }
     }
 }

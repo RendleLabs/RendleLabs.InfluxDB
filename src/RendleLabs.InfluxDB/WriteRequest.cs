@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 
 namespace RendleLabs.InfluxDB
 {
@@ -7,13 +8,15 @@ namespace RendleLabs.InfluxDB
         internal static WriteRequest FlushRequest = new WriteRequest(true);
         public ILineWriter Writer { get; }
         public object Args { get; }
+        public Activity Activity { get; }
         public long Timestamp { get; }
         internal bool Flush { get; }
 
-        public WriteRequest(ILineWriter writer, object args, DateTimeOffset? timestamp = null)
+        public WriteRequest(ILineWriter writer, object args, Activity activity = null, DateTimeOffset? timestamp = null)
         {
             Writer = writer;
             Args = args;
+            Activity = activity;
             Timestamp = timestamp.GetValueOrDefault(DateTimeOffset.UtcNow).ToUnixTimeMilliseconds();
             Flush = false;
         }
@@ -23,6 +26,7 @@ namespace RendleLabs.InfluxDB
             Flush = flush;
             Writer = default;
             Args = default;
+            Activity = default;
             Timestamp = default;
         }
     }

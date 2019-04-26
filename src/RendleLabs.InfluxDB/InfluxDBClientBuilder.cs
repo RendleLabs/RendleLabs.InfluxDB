@@ -7,7 +7,7 @@ namespace RendleLabs.InfluxDB
     /// </summary>
     public class InfluxDBClientBuilder
     {
-        private const int DefaultInitialBufferSize = 1024 * 64;
+        private const int DefaultInitialBufferSize = 1024 * 128;
         private const int DefaultMaxBufferSize = 1024 * 1024 * 8;
         private readonly IInfluxDBHttpClient _httpClient;
         private readonly string _database;

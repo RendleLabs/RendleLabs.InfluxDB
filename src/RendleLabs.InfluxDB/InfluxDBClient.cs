@@ -1,24 +1,28 @@
 using System;
 using System.Buffers;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace RendleLabs.InfluxDB
 {
-    public class InfluxDBClient : IDisposable, IInfluxDBClient
+    public class InfluxDBClient : IInfluxDBClient
     {
-        private readonly IInfluxDBHttpClient _httpClient;
+        private readonly Channel<WriteRequest> _requests = Channel.CreateBounded<WriteRequest>(new BoundedChannelOptions(8192)
+        {
+            FullMode = BoundedChannelFullMode.Wait,
+            SingleReader = true
+        });
+
         private readonly Action<Exception> _errorCallback;
-        private readonly string _path;
-        private readonly BlockingCollection<WriteRequest> _requests = new BlockingCollection<WriteRequest>();
-        private readonly Thread _thread;
+        private readonly Task _task;
         private readonly object _sync = new object();
         private readonly List<Task> _pending = new List<Task>();
         private readonly CancellationTokenSource _cancellationTokenSource;
         private readonly TimeSpan _forceFlushInterval;
         private readonly Timer _timer;
+        private readonly InfluxDBOutput _output;
         private bool _isDisposed;
         private byte[] _memory;
         private int _size;
@@ -28,10 +32,9 @@ namespace RendleLabs.InfluxDB
         private InfluxDBClient(IInfluxDBHttpClient httpClient, string database, string retentionPolicy, Action<Exception> errorCallback, int initialBufferSize,
             int maxBufferSize, CancellationTokenSource cancellationTokenSource, TimeSpan? forceFlushInterval)
         {
-            _httpClient = httpClient;
             _errorCallback = errorCallback;
 
-            _path = retentionPolicy == null
+            var path = retentionPolicy == null
                 ? $"write?db={Uri.EscapeDataString(database)}&precision=ms"
                 : $"write?db={Uri.EscapeDataString(database)}&precision=ms&rp={Uri.EscapeDataString(retentionPolicy)}";
 
@@ -46,17 +49,15 @@ namespace RendleLabs.InfluxDB
                 _timer = new Timer(ForceFlush, null, _forceFlushInterval, _forceFlushInterval);
             }
 
-            _thread = new Thread(Run)
-            {
-                IsBackground = true
-            };
+            _output = new InfluxDBOutput(httpClient, path);
+            _task = Run(_cancellationTokenSource.Token);
         }
 
-        public bool TryRequest(WriteRequest request) => _requests.TryAdd(request);
+        public bool TryRequest(WriteRequest request) => _requests.Writer.TryWrite(request);
 
         private void ForceFlush(object state)
         {
-            _requests.TryAdd(WriteRequest.FlushRequest);
+            _requests.Writer.TryWrite(WriteRequest.FlushRequest);
         }
 
         internal static InfluxDBClient Create(IInfluxDBHttpClient httpClient, string database, string retentionPolicy,
@@ -70,78 +71,86 @@ namespace RendleLabs.InfluxDB
 
             var cts = new CancellationTokenSource();
             var instance = new InfluxDBClient(httpClient, database, retentionPolicy, errorCallback, initialBufferSize, maxBufferSize, cts, forceFlushInterval);
-            instance.Start(cts.Token);
             return instance;
         }
 
-        private void Start(CancellationToken token)
+        private async Task Run(CancellationToken token)
         {
-            _thread.Start(token);
-        }
-
-        private void Run(object arg)
-        {
-            if (!(arg is CancellationToken token))
+            var reader = _requests.Reader;
+            try
             {
-                throw new InvalidOperationException();
-            }
-
-            while (!token.IsCancellationRequested)
-            {
-                try
+                while (!token.IsCancellationRequested && await reader.WaitToReadAsync(token))
                 {
-                    var request = _requests.Take(token);
-                    if (!token.IsCancellationRequested)
+                    while (reader.TryRead(out var request))
                     {
                         ProcessRequest(request);
                     }
                 }
-                catch (OperationCanceledException)
-                {
-                    // Ignore
-                }
             }
-        }
-
-        private void DrainQueue()
-        {
-            while (_requests.TryTake(out var request))
+            catch (OperationCanceledException)
             {
-                ProcessRequest(request);
+                // Ignore
+            }
+
+            if (_size > 0)
+            {
+                Send(_memory, _size);
             }
         }
 
         private void ProcessRequest(WriteRequest request)
         {
-            if (request.Flush && _size > 0)
+            try
             {
-                SwapMemoryAndWrite();
-                return;
-            }
-
-            var span = _memory.AsSpan(_size);
-            if (request.Writer.TryWrite(span, request.Args, request.Timestamp, out int bytesWritten))
-            {
-                _size += bytesWritten;
-                if (_bufferSize - _size < bytesWritten)
+                if (request.Flush && _size > 0)
                 {
                     SwapMemoryAndWrite();
+                    return;
                 }
 
-                return;
-            }
+                var span = _memory.AsSpan(_size);
 
+                if (request.Writer.LongestWritten < span.Length)
+                {
+                    if (request.Writer.TryWrite(span, request.Args, request.Timestamp, out int bytesWritten))
+                    {
+                        _size += bytesWritten;
+
+                        // If there's less space remaining than was just used, write the data out now
+                        if (_bufferSize - _size < bytesWritten)
+                        {
+                            SwapMemoryAndWrite();
+                        }
+
+                        return;
+                    }
+
+                    GrowBuffer();
+                }
+
+                SwapMemoryAndWrite();
+
+                // ReSharper disable once TailRecursiveCall
+                // Because this tail call should be eliminated by RyuJIT(?)
+                ProcessRequest(request);
+            }
+            catch (Exception ex)
+            {
+                _errorCallback(ex);
+            }
+        }
+
+        private void GrowBuffer()
+        {
             if (_size == 0)
             {
-                if (_bufferSize >= _maxBufferSize) return;
+                if (_bufferSize >= _maxBufferSize)
+                {
+                    throw new BufferMaxSizeExceededException();
+                }
+
                 _bufferSize *= 2;
             }
-
-            SwapMemoryAndWrite();
-
-            // ReSharper disable once TailRecursiveCall
-            // Because this tail call should be eliminated by RyuJIT(?)
-            ProcessRequest(request);
         }
 
         private void SwapMemoryAndWrite()
@@ -165,55 +174,25 @@ namespace RendleLabs.InfluxDB
             Send(oldBuffer, oldSize);
         }
 
-        private async void Send(byte[] buffer, int size)
+        private void Send(byte[] buffer, int size)
         {
-            var task = _httpClient.Write(buffer, size, _path);
-            _pending.Add(task);
-            try
-            {
-                await task;
-            }
-            catch (Exception e)
-            {
-                _errorCallback?.Invoke(e);
-            }
-            finally
-            {
-                ArrayPool<byte>.Shared.Return(buffer);
-                _pending.Remove(task);
-            }
+            _output.Write(buffer, size);
         }
 
-        public async void Dispose()
+        public void Dispose()
         {
             _isDisposed = true;
-            await FlushAsync();
+            _timer?.Dispose();
+            _requests.Writer.TryComplete();
+            Flush();
+            _output.Finish();
         }
 
-        public async Task FlushAsync()
+        public void Flush()
         {
-            _timer?.Dispose();
-            _cancellationTokenSource.Cancel();
-            _thread.Join();
-
-            DrainQueue();
-
-            _requests?.Dispose();
-            
             if (_size > 0)
             {
-                Send(_memory, _size);
-            }
-
-            if (_pending.Count <= 0) return;
-
-            try
-            {
-                await Task.WhenAll(_pending);
-            }
-            catch (Exception e)
-            {
-                _errorCallback?.Invoke(e);
+                SwapMemoryAndWrite();
             }
         }
     }
