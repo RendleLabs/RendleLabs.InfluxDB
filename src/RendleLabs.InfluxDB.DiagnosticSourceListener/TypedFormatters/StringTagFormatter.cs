@@ -5,7 +5,8 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener.TypedFormatters
 {
     internal class StringTagFormatter : TypedFormatter<string>, IFormatter
     {
-        public StringTagFormatter(PropertyInfo property) : base(property)
+        public StringTagFormatter(PropertyInfo property, Func<string, string> propertyNameFormatter)
+            : base(property, propertyNameFormatter)
         {
         }
 
