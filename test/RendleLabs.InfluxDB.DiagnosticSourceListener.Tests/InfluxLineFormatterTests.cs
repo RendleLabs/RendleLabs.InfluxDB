@@ -14,7 +14,7 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener.Tests
             var expected = $"test,tag=foo foo=42i {now}\n";
 
             var obj = new { tag = "foo", foo = 42 };
-            var formatter = new InfluxLineFormatter("test", obj.GetType(), new DiagnosticListenerOptions());
+            var formatter = new InfluxLineWriter("test", obj.GetType(), new DiagnosticListenerOptions());
 
             var memory = ArrayPool<byte>.Shared.Rent(1024);
             var span = memory.AsSpan();
@@ -31,7 +31,7 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener.Tests
             var expected = $"test foo=42i {now}\n";
 
             var obj = new { foo = 42 };
-            var formatter = new InfluxLineFormatter("test", obj.GetType(), new DiagnosticListenerOptions());
+            var formatter = new InfluxLineWriter("test", obj.GetType(), new DiagnosticListenerOptions());
 
             var memory = ArrayPool<byte>.Shared.Rent(1024);
             var span = memory.AsSpan();
@@ -51,7 +51,7 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener.Tests
             options.AddDefaultTag("foo", "bar");
 
             var obj = new { tag = "foo", foo = 42 };
-            var formatter = new InfluxLineFormatter("test", obj.GetType(), options);
+            var formatter = new InfluxLineWriter("test", obj.GetType(), options);
 
             var memory = ArrayPool<byte>.Shared.Rent(1024);
             var span = memory.AsSpan();
@@ -72,7 +72,7 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener.Tests
             options.FieldNameFormatter = n => n.ToUpperInvariant();
 
             var obj = new { tag = "foo", foo = 42 };
-            var formatter = new InfluxLineFormatter("test", obj.GetType(), options);
+            var formatter = new InfluxLineWriter("test", obj.GetType(), options);
 
             var memory = ArrayPool<byte>.Shared.Rent(1024);
             var span = memory.AsSpan();

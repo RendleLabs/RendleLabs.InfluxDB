@@ -10,22 +10,24 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener.Tests
         public async Task InfluxLineFormatterWritesToBuffer()
         {
             var mockHttp = new MockHttpClient();
-            var client = new InfluxDBClientBuilder(mockHttp, "test").Build();
-            DiagnosticSourceInfluxDB.Listen(client, s => s == "tests");
-
-            var source = new DiagnosticListener("tests");
-            if (source.IsEnabled("test"))
+            using (var client = new InfluxDBClientBuilder(mockHttp, "test").Build())
             {
-                var obj = new {size = 100, duration = 1000, url = "test.com", id = "42"};
-                source.Write("test", obj);
+                DiagnosticSourceInfluxDB.Listen(client, s => s == "tests");
+
+                var source = new DiagnosticListener("tests");
+                if (source.IsEnabled("test"))
+                {
+                    var obj = new {size = 100, duration = 1000, url = "test.com", id = "42"};
+                    source.Write("test", obj);
                 
-                // Seems like we have to wait for DiagnosticSource to actually complete.
-                await Task.Delay(16);
+                    // Seems like we have to wait for DiagnosticSource to actually complete.
+                    await Task.Delay(32);
+                }
+            
+                // Forces the client to complete outstanding requests
+                ((InfluxDBClient)client).Flush();
             }
-            
-            // Forces the client to complete outstanding requests
-            ((InfluxDBClient)client).Flush();
-            
+
             Assert.Equal("write?db=test&precision=ms", mockHttp.Path);
             Assert.NotNull(mockHttp.Bytes);
             Assert.StartsWith("tests_test", mockHttp.Text);

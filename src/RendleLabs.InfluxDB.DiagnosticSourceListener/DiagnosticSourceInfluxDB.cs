@@ -12,10 +12,14 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
     {
         private readonly Func<string, bool> _sourceNamePredicate;
         private readonly IInfluxDBClient _client;
-        private readonly ConcurrentBag<DiagnosticListenerObserver> _observers = new ConcurrentBag<DiagnosticListenerObserver>();
+
+        private readonly ConcurrentBag<DiagnosticListenerObserver> _observers =
+            new ConcurrentBag<DiagnosticListenerObserver>();
+
         private readonly DiagnosticListenerOptions _listenerOptions;
 
-        private DiagnosticSourceInfluxDB(IInfluxDBClient client, Func<string, bool> sourceNamePredicate, Action<DiagnosticListenerOptions> optionsCallback)
+        private DiagnosticSourceInfluxDB(IInfluxDBClient client, Func<string, bool> sourceNamePredicate,
+            Action<DiagnosticListenerOptions>? optionsCallback)
         {
             _sourceNamePredicate = sourceNamePredicate;
             _client = client;
@@ -66,12 +70,12 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
         /// <param name="client">The <see cref="IInfluxDBClient"/> to write data to.</param>
         /// <param name="sourceNamePredicate">A predicate to match <see cref="DiagnosticSource"/> names.</param>
         /// <param name="optionsCallback">Configuration callback</param>
-        public static IDisposable Listen(IInfluxDBClient client, Func<string, bool> sourceNamePredicate, Action<DiagnosticListenerOptions> optionsCallback = null)
+        public static IDisposable Listen(IInfluxDBClient client, Func<string, bool> sourceNamePredicate,
+            Action<DiagnosticListenerOptions>? optionsCallback = null)
         {
             var listener = new DiagnosticSourceInfluxDB(client, sourceNamePredicate, optionsCallback);
             DiagnosticListener.AllListeners.Subscribe(listener);
             return listener;
         }
     }
-
 }

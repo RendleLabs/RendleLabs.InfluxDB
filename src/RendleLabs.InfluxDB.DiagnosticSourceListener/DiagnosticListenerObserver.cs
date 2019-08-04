@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
 
 namespace RendleLabs.InfluxDB.DiagnosticSourceListener
 {
@@ -10,19 +9,19 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
     /// </summary>
     internal sealed class DiagnosticListenerObserver : IObserver<KeyValuePair<string, object>>, IDisposable
     {
-        private readonly InfluxLineFormatterCollection _formatters;
+        private readonly InfluxLineWriterCollection _writers;
         private readonly DiagnosticListener _listener;
         private readonly IInfluxDBClient _client;
-        private readonly Action<DiagnosticListener, Exception> _onError;
+        private readonly Action<DiagnosticListener, Exception>? _onError;
         private readonly IDisposable _subscription;
-        private (Type type, InfluxLineFormatter formatter) _last;
+        private (Type type, InfluxLineWriter formatter) _last;
 
         internal DiagnosticListenerObserver(DiagnosticListener listener, IInfluxDBClient client,
             DiagnosticListenerOptions options)
         {
             _listener = listener;
             _client = client;
-            _formatters = new InfluxLineFormatterCollection(listener.Name, options);
+            _writers = new InfluxLineWriterCollection(listener.Name, options);
             _onError = options.OnError;
             _subscription = listener.Subscribe(this);
         }
@@ -55,7 +54,7 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
                         return;
                     }
                 }
-                var formatter = _formatters.GetOrAdd(name, argsType);
+                var formatter = _writers.GetOrAdd(name, argsType);
                 _last = (argsType, formatter);
                 _client.TryRequest(new WriteRequest(formatter, args, Activity.Current));
             }

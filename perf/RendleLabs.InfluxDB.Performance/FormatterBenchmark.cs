@@ -10,7 +10,7 @@ namespace RendleLabs.InfluxDB.Performance
     [MemoryDiagnoser]
     public class FormatterBenchmark
     {
-        private static readonly InfluxLineFormatterCollection Formatters = new InfluxLineFormatterCollection("perf", new DiagnosticListenerOptions());
+        private static readonly InfluxLineWriterCollection Writers = new InfluxLineWriterCollection("perf", new DiagnosticListenerOptions());
         private static readonly byte[] Buffer = new byte[8192];
         private Args[] _args128;
         private Args[] _args1024;
@@ -22,7 +22,7 @@ namespace RendleLabs.InfluxDB.Performance
 
             for (int i = 0; i < _args128.Length; i++)
             {
-                var formatter = Formatters.GetOrAdd("perf", _args128[i].GetType());
+                var formatter = Writers.GetOrAdd("perf", _args128[i].GetType());
                 formatter.TryWrite(Buffer.AsSpan(), _args128[i], null, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), out int written);
                 values[i] = written;
             }
@@ -53,7 +53,7 @@ namespace RendleLabs.InfluxDB.Performance
 
             for (int i = 0; i < _args1024.Length; i++)
             {
-                var formatter = Formatters.GetOrAdd("perf", _args1024[i].GetType());
+                var formatter = Writers.GetOrAdd("perf", _args1024[i].GetType());
                 formatter.TryWrite(Buffer.AsSpan(), _args1024[i], null, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), out int written);
                 values[i] = written;
             }

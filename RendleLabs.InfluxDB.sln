@@ -1,9 +1,12 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26124.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29123.89
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{2C2DA860-5D3A-4C26-B90C-67105D955079}"
+	ProjectSection(SolutionItems) = preProject
+		src\Directory.Build.props = src\Directory.Build.props
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RendleLabs.InfluxDB.DiagnosticSourceListener", "src\RendleLabs.InfluxDB.DiagnosticSourceListener\RendleLabs.InfluxDB.DiagnosticSourceListener.csproj", "{616A922D-1097-44E2-A8D3-BB43F267C9FD}"
 EndProject
@@ -17,20 +20,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "perf", "perf", "{C1222A1C-6
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RendleLabs.InfluxDB.Performance", "perf\RendleLabs.InfluxDB.Performance\RendleLabs.InfluxDB.Performance.csproj", "{97882BA3-CA2D-496C-96EF-EC681B0041DF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RendleLabs.InfluxDB.Allocations", "perf\RendleLabs.InfluxDB.Allocations\RendleLabs.InfluxDB.Allocations.csproj", "{11722196-F24C-4661-BF1A-BAF3A638A29E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RendleLabs.InfluxDB.Allocations", "perf\RendleLabs.InfluxDB.Allocations\RendleLabs.InfluxDB.Allocations.csproj", "{11722196-F24C-4661-BF1A-BAF3A638A29E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RendleLabs.InfluxDB.IntegrationTests", "test\RendleLabs.InfluxDB.IntegrationTests\RendleLabs.InfluxDB.IntegrationTests.csproj", "{8097031A-F8CB-4C7C-82DD-F29625DFE4CE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RendleLabs.InfluxDB.IntegrationTests", "test\RendleLabs.InfluxDB.IntegrationTests\RendleLabs.InfluxDB.IntegrationTests.csproj", "{8097031A-F8CB-4C7C-82DD-F29625DFE4CE}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sandbox", "sandbox", "{FB76FD1D-EC1C-433C-9052-F75478B04911}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sandbox", "sandbox\Sandbox\Sandbox.csproj", "{A4817319-F13B-4155-B1B1-53A8F24F3421}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sandbox", "sandbox\Sandbox\Sandbox.csproj", "{A4817319-F13B-4155-B1B1-53A8F24F3421}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RendleLabs.InfluxDB.Tests", "test\RendleLabs.InfluxDB.Tests\RendleLabs.InfluxDB.Tests.csproj", "{88E6BAD6-D9F6-4970-91A5-4DE067C28739}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RendleLabs.InfluxDB.Tests", "test\RendleLabs.InfluxDB.Tests\RendleLabs.InfluxDB.Tests.csproj", "{88E6BAD6-D9F6-4970-91A5-4DE067C28739}"
 EndProject
 Global
-	GlobalSection(Performance) = preSolution
-		HasPerformanceSessions = true
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Debug|x64 = Debug|x64
@@ -152,5 +152,8 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {23143CAE-3633-4FEE-8F64-1597FCB56EFA}
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
 	EndGlobalSection
 EndGlobal

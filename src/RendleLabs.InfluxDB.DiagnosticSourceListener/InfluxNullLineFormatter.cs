@@ -26,7 +26,7 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
             _baseLength = _measurementLength + _defaultTagsLength + 2;
         }
 
-        public bool TryWrite(Span<byte> span, object args, Activity activity, long requestTimestamp, out int bytesWritten)
+        public bool TryWrite(Span<byte> span, object? args, Activity? activity, long requestTimestamp, out int bytesWritten)
         {
             if (span.Length < _measurementLength)
             {

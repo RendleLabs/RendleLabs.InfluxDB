@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace RendleLabs.InfluxDB.DiagnosticSourceListener
 {
-    internal class InfluxLineFormatter : ILineWriter
+    internal class InfluxLineWriter : ILineWriter
     {
         private const byte Newline = (byte)'\n';
         private const byte Space = (byte)' ';
@@ -19,7 +19,7 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
         private readonly bool _hasDefaultTags;
         private readonly int _baseLength;
 
-        internal InfluxLineFormatter(string measurement, Type argsType, DiagnosticListenerOptions options)
+        internal InfluxLineWriter(string measurement, Type argsType, DiagnosticListenerOptions options)
         {
             _measurement = InfluxName.Escape(measurement);
             _measurementLength = _measurement.Length;
@@ -30,7 +30,7 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
             _baseLength = _measurementLength + _defaultTagsLength + 2;
         }
 
-        public bool TryWrite(Span<byte> span, object args, Activity activity, long requestTimestamp,
+        public bool TryWrite(Span<byte> span, object? args, Activity? activity, long requestTimestamp,
             out int bytesWritten)
         {
             bytesWritten = _baseLength;

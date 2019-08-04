@@ -1,9 +1,9 @@
 using System;
 using System.Buffers;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using RendleLabs.InfluxDB.Internal;
 
 namespace RendleLabs.InfluxDB
 {
@@ -20,7 +20,7 @@ namespace RendleLabs.InfluxDB
         });
 
         private readonly Task _task;
-        private readonly List<Task> _writes = new List<Task>();
+        private Task _writes = Task.CompletedTask;
         
         private int _stopped;
 
@@ -46,27 +46,20 @@ namespace RendleLabs.InfluxDB
             var reader = _data.Reader;
             try
             {
-                while (await reader.WaitToReadAsync())
+                while (await reader.WaitToReadAsync().ConfigureAwait(false))
                 {
                     try
                     {
                         while (reader.TryRead(out var data))
                         {
-                            _writes.Add(Send(data.Buffer, data.Size));
+                            _writes = _writes.Append(Send(data.Buffer, data.Size));
                         }
 
-                        if (_writes.Count == 1)
-                        {
-                            await _writes[0];
-                        }
-                        else
-                        {
-                            await Task.WhenAll(_writes);
-                        }
+                        await _writes.ConfigureAwait(false);
                     }
                     finally
                     {
-                        _writes.Clear();
+                        _writes = Task.CompletedTask;
                     }
                 }
             }
@@ -80,7 +73,7 @@ namespace RendleLabs.InfluxDB
         {
             try
             {
-                await _influxDBHttpClient.Write(buffer, size, _path);
+                await _influxDBHttpClient.Write(buffer, size, _path).ConfigureAwait(false);
             }
             finally
             {

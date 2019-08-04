@@ -18,7 +18,7 @@ namespace RendleLabs.InfluxDB
         /// <param name="bytesWritten">The number of bytes that were written, if any.</param>
         /// <returns><c>true</c> if the memory provided was large enough and the data was written successfully; otherwise, <c>false</c>.</returns>
         /// <remarks>If the method returns <c>false</c>, <c>bytesWritten</c> should be zero.</remarks>
-        bool TryWrite(Span<byte> buffer, object args, Activity activity, long requestTimestamp, out int bytesWritten);
+        bool TryWrite(Span<byte> buffer, object? args, Activity? activity, long requestTimestamp, out int bytesWritten);
         
         /// <summary>
         /// Gets the longest number of bytes written by this writer.

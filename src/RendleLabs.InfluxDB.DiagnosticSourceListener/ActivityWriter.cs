@@ -94,7 +94,7 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool TryEscapeString(Span<byte> encoded, Span<byte> bytes, ref int written)
         {
-            for (int i = 0; i < encoded.Length; i++)
+            for (int i = 0, l = encoded.Length; i < l; i++)
             {
                 switch (encoded[i])
                 {

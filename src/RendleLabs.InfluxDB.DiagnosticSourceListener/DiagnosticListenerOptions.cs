@@ -12,13 +12,13 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
         public Dictionary<(string, Type), Func<PropertyInfo, IFormatter>> CustomFieldFormatters { get; } = new Dictionary<(string, Type), Func<PropertyInfo, IFormatter>>();
         public Dictionary<(string, Type), Func<PropertyInfo, IFormatter>> CustomTagFormatters { get; } = new Dictionary<(string, Type), Func<PropertyInfo, IFormatter>>();
 
-        public Func<string, string> NameFixer { get; set; }
+        public Func<string, string>? NameFixer { get; set; }
 
-        public Func<string, string> TagNameFormatter { get; set; }
+        public Func<string, string>? TagNameFormatter { get; set; }
 
-        public Func<string, string> FieldNameFormatter { get; set; }
+        public Func<string, string>? FieldNameFormatter { get; set; }
 
-        public Action<DiagnosticListener, Exception> OnError { get; set; }
+        public Action<DiagnosticListener, Exception>? OnError { get; set; }
 
         public byte[] DefaultTags => _defaultTags.Bytes;
 

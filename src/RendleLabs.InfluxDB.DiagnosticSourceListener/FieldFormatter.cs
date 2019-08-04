@@ -7,7 +7,7 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
 {
     internal static class FieldFormatter // : IFormatter
     {
-        public static IFormatter TryCreate(PropertyInfo property, Func<string, string> propertyNameFormatter)
+        public static IFormatter? TryCreate(PropertyInfo property, Func<string, string> propertyNameFormatter)
         {
             return TypedFormatter.Create(property, propertyNameFormatter);
         }

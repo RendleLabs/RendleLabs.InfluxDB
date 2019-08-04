@@ -11,8 +11,8 @@ namespace RendleLabs.InfluxDB
         private const int DefaultMaxBufferSize = 1024 * 1024 * 8;
         private readonly IInfluxDBHttpClient _httpClient;
         private readonly string _database;
-        private readonly string _retentionPolicy;
-        private readonly Action<Exception> _errorCallback;
+        private readonly string? _retentionPolicy;
+        private readonly Action<Exception>? _errorCallback;
         private readonly int _initialBufferSize;
         private readonly int _maxBufferSize;
         private readonly TimeSpan? _forceFlushInterval;
@@ -47,8 +47,8 @@ namespace RendleLabs.InfluxDB
         {
         }
         
-        private InfluxDBClientBuilder(IInfluxDBHttpClient httpClient, string database, string retentionPolicy,
-            Action<Exception> errorCallback, int initialBufferSize, int maxBufferSize, TimeSpan? forceFlushInterval)
+        private InfluxDBClientBuilder(IInfluxDBHttpClient httpClient, string database, string? retentionPolicy,
+            Action<Exception>? errorCallback, int initialBufferSize, int maxBufferSize, TimeSpan? forceFlushInterval)
         {
             _httpClient = httpClient;
             _database = database;

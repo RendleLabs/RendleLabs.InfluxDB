@@ -8,26 +8,36 @@ namespace RendleLabs.InfluxDB
         internal static WriteRequest FlushRequest = new WriteRequest(true);
         public readonly ILineWriter Writer;
         public readonly object Args;
-        public readonly Activity Activity;
+        public readonly Activity? Activity;
         public readonly long Timestamp;
-        internal readonly bool Flush;
+        internal readonly bool FlushSentinel;
 
-        public WriteRequest(ILineWriter writer, object args, Activity activity = null, DateTimeOffset? timestamp = null)
+        public WriteRequest(ILineWriter writer, object args, Activity? activity = null, DateTimeOffset? timestamp = null)
         {
             Writer = writer;
             Args = args;
             Activity = activity;
             Timestamp = timestamp.GetValueOrDefault(DateTimeOffset.UtcNow).ToUnixTimeMilliseconds();
-            Flush = false;
+            FlushSentinel = false;
         }
 
-        private WriteRequest(bool flush)
+        private WriteRequest(bool flushSentinel)
         {
-            Flush = flush;
-            Writer = default;
-            Args = default;
+            FlushSentinel = flushSentinel;
+            Writer = new NullWriter();
+            Args = new object();
             Activity = default;
             Timestamp = default;
+        }
+
+        private class NullWriter : ILineWriter
+        {
+            public bool TryWrite(Span<byte> buffer, object? args, Activity? activity, long requestTimestamp, out int bytesWritten)
+            {
+                throw new NotImplementedException();
+            }
+
+            public int LongestWritten { get; } = 0;
         }
     }
 }

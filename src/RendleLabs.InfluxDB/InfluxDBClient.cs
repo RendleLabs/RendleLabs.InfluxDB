@@ -1,6 +1,5 @@
 using System;
 using System.Buffers;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -9,19 +8,21 @@ namespace RendleLabs.InfluxDB
 {
     public class InfluxDBClient : IInfluxDBClient
     {
-        private readonly Channel<WriteRequest> _requests = Channel.CreateBounded<WriteRequest>(new BoundedChannelOptions(8192)
-        {
-            FullMode = BoundedChannelFullMode.Wait,
-            SingleReader = true
-        });
+        private readonly ArrayPool<byte> _arrayPool;
 
-        private readonly Action<Exception> _errorCallback;
+        private readonly Channel<WriteRequest> _requests = Channel.CreateBounded<WriteRequest>(
+            new BoundedChannelOptions(8192)
+            {
+                FullMode = BoundedChannelFullMode.Wait,
+                SingleReader = true
+            });
+
+        private readonly Action<Exception>? _errorCallback;
         private readonly Task _task;
         private readonly object _sync = new object();
-        private readonly List<Task> _pending = new List<Task>();
         private readonly CancellationTokenSource _cancellationTokenSource;
         private readonly TimeSpan _forceFlushInterval;
-        private readonly Timer _timer;
+        private readonly Timer? _timer;
         private readonly InfluxDBOutput _output;
         private bool _isDisposed;
         private byte[] _memory;
@@ -29,8 +30,10 @@ namespace RendleLabs.InfluxDB
         private int _bufferSize;
         private readonly int _maxBufferSize;
 
-        private InfluxDBClient(IInfluxDBHttpClient httpClient, string database, string retentionPolicy, Action<Exception> errorCallback, int initialBufferSize,
-            int maxBufferSize, CancellationTokenSource cancellationTokenSource, TimeSpan? forceFlushInterval)
+        private InfluxDBClient(IInfluxDBHttpClient httpClient, string database, string? retentionPolicy,
+            Action<Exception>? errorCallback, int initialBufferSize,
+            int maxBufferSize, CancellationTokenSource cancellationTokenSource, TimeSpan? forceFlushInterval,
+            ArrayPool<byte> arrayPool)
         {
             _errorCallback = errorCallback;
 
@@ -40,8 +43,9 @@ namespace RendleLabs.InfluxDB
 
             _bufferSize = initialBufferSize;
             _maxBufferSize = maxBufferSize;
+            _arrayPool = arrayPool;
             _cancellationTokenSource = cancellationTokenSource ?? new CancellationTokenSource();
-            _memory = ArrayPool<byte>.Shared.Rent(initialBufferSize);
+            _memory = _arrayPool.Rent(initialBufferSize);
 
             if (forceFlushInterval != null)
             {
@@ -55,22 +59,28 @@ namespace RendleLabs.InfluxDB
 
         public bool TryRequest(WriteRequest request) => _requests.Writer.TryWrite(request);
 
+        public ValueTask RequestAsync(WriteRequest request, CancellationToken token = default) =>
+            _requests.Writer.WriteAsync(request, token);
+
         private void ForceFlush(object state)
         {
             _requests.Writer.TryWrite(WriteRequest.FlushRequest);
         }
 
-        internal static InfluxDBClient Create(IInfluxDBHttpClient httpClient, string database, string retentionPolicy,
-            Action<Exception> errorCallback,
+        internal static InfluxDBClient Create(IInfluxDBHttpClient httpClient, string database, string? retentionPolicy,
+            Action<Exception>? errorCallback,
             int initialBufferSize,
             int maxBufferSize,
-            TimeSpan? forceFlushInterval)
+            TimeSpan? forceFlushInterval,
+            ArrayPool<byte>? arrayPool = null)
         {
             if (httpClient == null) throw new ArgumentNullException(nameof(httpClient));
-            if (string.IsNullOrEmpty(database)) throw new ArgumentException("Value cannot be null or empty.", nameof(database));
+            if (string.IsNullOrEmpty(database))
+                throw new ArgumentException("Value cannot be null or empty.", nameof(database));
 
             var cts = new CancellationTokenSource();
-            var instance = new InfluxDBClient(httpClient, database, retentionPolicy, errorCallback, initialBufferSize, maxBufferSize, cts, forceFlushInterval);
+            var instance = new InfluxDBClient(httpClient, database, retentionPolicy, errorCallback, initialBufferSize,
+                maxBufferSize, cts, forceFlushInterval, arrayPool ?? ArrayPool<byte>.Shared);
             return instance;
         }
 
@@ -100,7 +110,7 @@ namespace RendleLabs.InfluxDB
 
         private void ProcessRequest(WriteRequest request)
         {
-            if (request.Flush && _size > 0)
+            if (request.FlushSentinel && _size > 0)
             {
                 SwapMemoryAndWrite();
                 return;
@@ -115,18 +125,19 @@ namespace RendleLabs.InfluxDB
             {
                 var span = _memory.AsSpan(_size);
 
-                if (request.Writer.TryWrite(span, request.Args, request.Activity, request.Timestamp, out int bytesWritten))
+                if (request.Writer.TryWrite(span, request.Args, request.Activity, request.Timestamp,
+                    out int bytesWritten))
                 {
                     _size += bytesWritten;
                     return;
                 }
 
-                GrowBuffer();
+                IncreaseNextBufferSize();
                 SwapMemoryAndWrite();
             }
             catch (Exception ex)
             {
-                _errorCallback(ex);
+                _errorCallback?.Invoke(ex);
             }
 
             // ReSharper disable once TailRecursiveCall
@@ -134,7 +145,7 @@ namespace RendleLabs.InfluxDB
             ProcessRequest(request);
         }
 
-        private void GrowBuffer()
+        private void IncreaseNextBufferSize()
         {
             if (_size == 0)
             {
@@ -157,7 +168,7 @@ namespace RendleLabs.InfluxDB
             {
                 oldBuffer = _memory;
                 oldSize = _size;
-                _memory = ArrayPool<byte>.Shared.Rent(_bufferSize);
+                _memory = _arrayPool.Rent(_bufferSize);
                 _size = 0;
                 if (!_isDisposed)
                 {
@@ -180,6 +191,9 @@ namespace RendleLabs.InfluxDB
             _requests.Writer.TryComplete();
             Flush();
             _output.Finish();
+            _cancellationTokenSource.Cancel();
+            _cancellationTokenSource.Dispose();
+            _task.Dispose();
         }
 
         public void Flush()

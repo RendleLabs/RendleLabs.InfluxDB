@@ -25,7 +25,7 @@ namespace RendleLabs.InfluxDB.Allocations
 
     class Runner
     {
-        private static readonly InfluxLineFormatterCollection Formatters = new InfluxLineFormatterCollection("perf", new DiagnosticListenerOptions());
+        private static readonly InfluxLineWriterCollection Writers = new InfluxLineWriterCollection("perf", new DiagnosticListenerOptions());
         private static readonly byte[] Buffer = new byte[8192];
 
         public static int[] LineFormatter128(object[] args128)
@@ -34,7 +34,7 @@ namespace RendleLabs.InfluxDB.Allocations
 
             for (int i = 0; i < args128.Length; i++)
             {
-                var formatter = Formatters.GetOrAdd("perf", args128[i].GetType());
+                var formatter = Writers.GetOrAdd("perf", args128[i].GetType());
                 formatter.TryWrite(Buffer.AsSpan(), args128[i], null, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), out int written);
                 values[i] = written;
             }

@@ -27,7 +27,7 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
             _tagCount = _tagFormatters.Length;
         }
 
-        public bool Write(object args, Activity activity, Span<byte> span, out int bytesWritten)
+        public bool Write(object? args, Activity? activity, Span<byte> span, out int bytesWritten)
         {
             if (span.Length == 0) goto fail;
 
@@ -37,7 +37,7 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
             {
                 if (span.Length == 0) goto fail;
 
-                if (!_tagFormatters[i].TryWrite(args, span, true, out int tagWritten)) goto fail;
+                if (!_tagFormatters[i].TryWrite(args!, span, true, out int tagWritten)) goto fail;
 
                 span = span.Slice(tagWritten);
                 bytesWritten += tagWritten;
@@ -62,7 +62,7 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
             {
                 if (span.Length == 0) goto fail;
 
-                if (!_fieldFormatters[i].TryWrite(args, span, comma, out int fieldWritten)) goto fail;
+                if (!_fieldFormatters[i].TryWrite(args!, span, comma, out int fieldWritten)) goto fail;
 
                 span = span.Slice(fieldWritten);
                 bytesWritten += fieldWritten;

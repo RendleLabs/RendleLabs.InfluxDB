@@ -6,31 +6,31 @@ namespace Sandbox
 {
     class Program
     {
-        private static readonly DiagnosticSource _diagnostics 
+        private static readonly DiagnosticSource Diagnostics 
             = new DiagnosticListener(typeof(Program).FullName);
 
         static void Main(string[] args)
         {
-            if (_diagnostics.IsEnabled("Main"))
+            if (Diagnostics.IsEnabled("Main"))
             {
-                _diagnostics.Write("Main", new { arg_count = args.Length });
+                Diagnostics.Write("Main", new { arg_count = args.Length });
             }
         }
 
         static async Task DoAThing(int id)
         {
-            if (_diagnostics.IsEnabled("Things"))
+            if (Diagnostics.IsEnabled("Things"))
             {
                 var activity = new Activity("DoThing");
                 var args = new { id };
-                _diagnostics.StartActivity(activity, args);
+                Diagnostics.StartActivity(activity, args);
                 try
                 {
                     await DoIt();
                 }
                 finally
                 {
-                    _diagnostics.StopActivity(activity, args);
+                    Diagnostics.StopActivity(activity, args);
                 }
             }
         }

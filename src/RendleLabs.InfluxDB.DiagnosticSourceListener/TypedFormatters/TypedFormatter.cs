@@ -5,7 +5,7 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener.TypedFormatters
 {
     internal static class TypedFormatter
     {
-        internal static IFormatter Create(PropertyInfo property, Func<string, string> propertyNameFormatter)
+        internal static IFormatter? Create(PropertyInfo property, Func<string, string> propertyNameFormatter)
         {
             if (property.PropertyType == typeof(bool)) return new BooleanFieldFormatter(property, propertyNameFormatter);
             if (property.PropertyType == typeof(bool?)) return new NullableBooleanFieldFormatter(property, propertyNameFormatter);

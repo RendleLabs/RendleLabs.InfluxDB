@@ -7,7 +7,7 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
 {
     internal static class TagFormatter
     {
-        public static IFormatter TryCreate(PropertyInfo property, Func<string, string> propertyNameFormatter)
+        public static IFormatter? TryCreate(PropertyInfo property, Func<string, string> propertyNameFormatter)
         {
             if (property.PropertyType == typeof(string)) return new StringTagFormatter(property, propertyNameFormatter);
             if (property.PropertyType == typeof(DateTime)) return new DateTimeTagFormatter(property, propertyNameFormatter);
