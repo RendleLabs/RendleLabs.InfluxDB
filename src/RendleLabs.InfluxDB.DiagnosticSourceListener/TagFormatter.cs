@@ -7,15 +7,15 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
 {
     internal static class TagFormatter
     {
-        public static IFormatter TryCreate(PropertyInfo property)
+        public static IFormatter TryCreate(PropertyInfo property, Func<string, string> propertyNameFormatter)
         {
-            if (property.PropertyType == typeof(string)) return new StringTagFormatter(property);
-            if (property.PropertyType == typeof(DateTime)) return new DateTimeTagFormatter(property);
-            if (property.PropertyType == typeof(DateTime?)) return new NullableDateTimeTagFormatter(property);
-            if (property.PropertyType == typeof(DateTimeOffset)) return new DateTimeOffsetTagFormatter(property);
-            if (property.PropertyType == typeof(DateTimeOffset?)) return new NullableDateTimeOffsetTagFormatter(property);
-            if (property.PropertyType == typeof(Guid)) return new GuidTagFormatter(property);
-            if (property.PropertyType == typeof(Guid?)) return new NullableGuidTagFormatter(property);
+            if (property.PropertyType == typeof(string)) return new StringTagFormatter(property, propertyNameFormatter);
+            if (property.PropertyType == typeof(DateTime)) return new DateTimeTagFormatter(property, propertyNameFormatter);
+            if (property.PropertyType == typeof(DateTime?)) return new NullableDateTimeTagFormatter(property, propertyNameFormatter);
+            if (property.PropertyType == typeof(DateTimeOffset)) return new DateTimeOffsetTagFormatter(property, propertyNameFormatter);
+            if (property.PropertyType == typeof(DateTimeOffset?)) return new NullableDateTimeOffsetTagFormatter(property, propertyNameFormatter);
+            if (property.PropertyType == typeof(Guid)) return new GuidTagFormatter(property, propertyNameFormatter);
+            if (property.PropertyType == typeof(Guid?)) return new NullableGuidTagFormatter(property, propertyNameFormatter);
             return null;
         }
 

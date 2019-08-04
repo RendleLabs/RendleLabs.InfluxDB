@@ -10,7 +10,7 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener.Tests
         public void FormatsDecimalCorrectly()
         {
             var args = new {foo = 42m};
-            var formatter = FieldFormatter.TryCreate(args.GetType().GetProperty("foo"));
+            var formatter = FieldFormatter.TryCreate(args.GetType().GetProperty("foo"), NameFixer.Identity);
             var buffer = new byte[64];
             Assert.True(formatter.TryWrite(args, buffer.AsSpan(), false, out int written));
             Assert.Equal(6, written);
@@ -23,7 +23,7 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener.Tests
         {
             decimal? foo = 42m;
             var args = new {foo};
-            var formatter = FieldFormatter.TryCreate(args.GetType().GetProperty("foo"));
+            var formatter = FieldFormatter.TryCreate(args.GetType().GetProperty("foo"), NameFixer.Identity);
             var buffer = new byte[64];
             Assert.True(formatter.TryWrite(args, buffer.AsSpan(), false, out int written));
             Assert.Equal(6, written);

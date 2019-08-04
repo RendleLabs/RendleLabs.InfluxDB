@@ -5,7 +5,8 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener.TypedFormatters
 {
     internal class DoubleFieldFormatter : TypedFormatter<double>, IFormatter
     {
-        public DoubleFieldFormatter(PropertyInfo property) : base(property)
+        public DoubleFieldFormatter(PropertyInfo property, Func<string, string> propertyNameFormatter)
+            : base(property, propertyNameFormatter)
         {
         }
 

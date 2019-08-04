@@ -5,7 +5,8 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener.TypedFormatters
 {
     internal class NullableUInt32FieldFormatter : TypedFormatter<uint?>, IFormatter
     {
-        public NullableUInt32FieldFormatter(PropertyInfo property) : base(property)
+        public NullableUInt32FieldFormatter(PropertyInfo property, Func<string, string> propertyNameFormatter)
+            : base(property, propertyNameFormatter)
         {
         }
 

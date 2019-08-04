@@ -5,7 +5,8 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener.TypedFormatters
 {
     internal class NullableDecimalFieldFormatter : TypedFormatter<decimal?>, IFormatter
     {
-        public NullableDecimalFieldFormatter(PropertyInfo property) : base(property)
+        public NullableDecimalFieldFormatter(PropertyInfo property, Func<string, string> propertyNameFormatter)
+            : base(property, propertyNameFormatter)
         {
         }
 

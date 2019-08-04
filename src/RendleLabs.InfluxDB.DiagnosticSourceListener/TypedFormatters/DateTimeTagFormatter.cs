@@ -5,7 +5,8 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener.TypedFormatters
 {
     internal class DateTimeTagFormatter : TypedFormatter<DateTime>, IFormatter
     {
-        public DateTimeTagFormatter(PropertyInfo property) : base(property)
+        public DateTimeTagFormatter(PropertyInfo property, Func<string, string> propertyNameFormatter)
+            : base(property, propertyNameFormatter)
         {
         }
 

@@ -17,9 +17,9 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
         private readonly IFormatter[] _tagFormatters;
         private readonly int _tagCount;
 
-        public ObjectFormatter(Type type, CustomDict customFieldFormatters, CustomDict customTagFormatters)
+        public ObjectFormatter(Type type, DiagnosticListenerOptions options)
         {
-            var (fieldFormatters, tagFormatters) = CreateFormatters(type, customFieldFormatters, customTagFormatters);
+            var (fieldFormatters, tagFormatters) = CreateFormatters(type, options);
 
             _fieldFormatters = fieldFormatters.ToArray();
             _fieldCount = _fieldFormatters.Length;
@@ -87,20 +87,20 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
         }
 
         private static (List<IFormatter> fieldFormatters, List<IFormatter> tagFormatters) CreateFormatters(Type type,
-            CustomDict customFieldFormatters, CustomDict customTagFormatters)
+            DiagnosticListenerOptions options)
         {
             var fieldFormatters = new List<IFormatter>();
             var tagFormatters = new List<IFormatter>();
             foreach (var property in type.GetProperties().Where(p => p.CanRead))
             {
-                if (CheckCustomFormatters(customFieldFormatters, customTagFormatters, property, fieldFormatters, tagFormatters))
+                if (CheckCustomFormatters(options.CustomFieldFormatters, options.CustomTagFormatters, property, fieldFormatters, tagFormatters))
                 {
                     continue;
                 }
 
                 if (FieldFormatter.IsFieldType(property.PropertyType))
                 {
-                    var formatter = FieldFormatter.TryCreate(property);
+                    var formatter = FieldFormatter.TryCreate(property, options.FieldNameFormatter ?? NameFixer.Identity);
                     if (formatter != null)
                     {
                         fieldFormatters.Add(formatter);
@@ -108,7 +108,7 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
                 }
                 else if (TagFormatter.IsTagType(property.PropertyType))
                 {
-                    var tagFormatter = TagFormatter.TryCreate(property);
+                    var tagFormatter = TagFormatter.TryCreate(property, options.TagNameFormatter ?? NameFixer.Identity);
                     if (tagFormatter != null)
                     {
                         tagFormatters.Add(tagFormatter);

@@ -5,7 +5,8 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener.TypedFormatters
 {
     internal class NullableTimeSpanFieldFormatter : TypedFormatter<TimeSpan?>, IFormatter
     {
-        public NullableTimeSpanFieldFormatter(PropertyInfo property) : base(property)
+        public NullableTimeSpanFieldFormatter(PropertyInfo property, Func<string, string> propertyNameFormatter)
+            : base(property, propertyNameFormatter)
         {
         }
 

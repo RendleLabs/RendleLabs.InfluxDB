@@ -12,11 +12,9 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener.Tests
         public void FormatsCustomField()
         {
             var args = new {custom = new CustomObject {Value = 42, Thing = "foo"}};
-            Dictionary<(string, Type), Func<PropertyInfo, IFormatter>> cff = new Dictionary<(string, Type), Func<PropertyInfo, IFormatter>>
-            {
-                [("custom", typeof(CustomObject))] = p => new CustomObjectFieldFormatter(p)
-            };
-            var objectFormatter = new ObjectFormatter(args.GetType(), cff, null);
+            var options = new DiagnosticListenerOptions();
+            options.AddCustomFieldFormatter("custom", typeof(CustomObject), p => new CustomObjectFieldFormatter(p));
+            var objectFormatter = new ObjectFormatter(args.GetType(), options);
             var buffer = new byte[128];
             var span = buffer.AsSpan();
             Assert.True(objectFormatter.Write(args, null, span, out int written));
@@ -28,15 +26,10 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener.Tests
         public void FormatsCustomFieldAndTag()
         {
             var args = new {custom = new CustomObject {Value = 42, Thing = "foo"}};
-            Dictionary<(string, Type), Func<PropertyInfo, IFormatter>> cff = new Dictionary<(string, Type), Func<PropertyInfo, IFormatter>>
-            {
-                [("custom", typeof(CustomObject))] = p => new CustomObjectFieldFormatter(p)
-            };
-            Dictionary<(string, Type), Func<PropertyInfo, IFormatter>> ctf = new Dictionary<(string, Type), Func<PropertyInfo, IFormatter>>
-            {
-                [("custom", typeof(CustomObject))] = p => new CustomObjectTagFormatter(p)
-            };
-            var objectFormatter = new ObjectFormatter(args.GetType(), cff, ctf);
+            var options = new DiagnosticListenerOptions();
+            options.AddCustomFieldFormatter("custom", typeof(CustomObject), p => new CustomObjectFieldFormatter(p));
+            options.AddCustomTagFormatter("custom", typeof(CustomObject), p => new CustomObjectTagFormatter(p));
+            var objectFormatter = new ObjectFormatter(args.GetType(), options);
             var buffer = new byte[128];
             var span = buffer.AsSpan();
             Assert.True(objectFormatter.Write(args, null, span, out int written));
