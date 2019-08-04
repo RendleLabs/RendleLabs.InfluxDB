@@ -8,8 +8,8 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
 {
     internal class InfluxLineFormatter : ILineWriter
     {
-        private const byte Newline = (byte) '\n';
-        private const byte Space = (byte) ' ';
+        private const byte Newline = (byte)'\n';
+        private const byte Space = (byte)' ';
 
         private readonly byte[] _measurement;
         private readonly int _measurementLength;
@@ -19,14 +19,12 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
         private readonly bool _hasDefaultTags;
         private readonly int _baseLength;
 
-        internal InfluxLineFormatter(string measurement, Type argsType,
-            Dictionary<(string, Type), Func<PropertyInfo, IFormatter>> customFieldFormatters,
-            Dictionary<(string, Type), Func<PropertyInfo, IFormatter>> customTagFormatters, byte[] optionsDefaultTags)
+        internal InfluxLineFormatter(string measurement, Type argsType, DiagnosticListenerOptions options)
         {
             _measurement = InfluxName.Escape(measurement);
             _measurementLength = _measurement.Length;
-            _objectFormatter = new ObjectFormatter(argsType, customFieldFormatters, customTagFormatters);
-            _defaultTags = optionsDefaultTags;
+            _objectFormatter = new ObjectFormatter(argsType, options);
+            _defaultTags = options.DefaultTags;
             _hasDefaultTags = _defaultTags != null && (_defaultTagsLength = _defaultTags.Length) > 0;
 
             _baseLength = _measurementLength + _defaultTagsLength + 2;
@@ -78,12 +76,12 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
 
             span[0] = Newline;
             bytesWritten = _baseLength + written + timestampWritten;
-            
+
             LongestWritten = Math.Max(LongestWritten, bytesWritten);
-            
+
             return true;
 
-            fail:
+        fail:
             bytesWritten = 0;
             return false;
         }
@@ -92,4 +90,3 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
     }
 }
 
-    

@@ -5,7 +5,8 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener.TypedFormatters
 {
     internal class Int16FieldFormatter : TypedFormatter<short>, IFormatter
     {
-        public Int16FieldFormatter(PropertyInfo property) : base(property)
+        public Int16FieldFormatter(PropertyInfo property, Func<string, string> propertyNameFormatter)
+            : base(property, propertyNameFormatter)
         {
         }
 

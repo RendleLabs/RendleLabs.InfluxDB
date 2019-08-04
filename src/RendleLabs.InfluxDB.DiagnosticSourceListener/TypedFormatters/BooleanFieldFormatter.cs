@@ -5,7 +5,8 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener.TypedFormatters
 {
     internal class BooleanFieldFormatter : TypedFormatter<bool>, IFormatter
     {
-        public BooleanFieldFormatter(PropertyInfo property) : base(property)
+        public BooleanFieldFormatter(PropertyInfo property, Func<string, string> propertyNameFormatter)
+            : base(property, propertyNameFormatter)
         {
         }
 

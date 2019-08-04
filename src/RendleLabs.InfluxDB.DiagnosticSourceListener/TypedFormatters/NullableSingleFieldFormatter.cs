@@ -5,7 +5,8 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener.TypedFormatters
 {
     internal class NullableSingleFieldFormatter : TypedFormatter<float?>, IFormatter
     {
-        public NullableSingleFieldFormatter(PropertyInfo property) : base(property)
+        public NullableSingleFieldFormatter(PropertyInfo property, Func<string, string> propertyNameFormatter)
+            : base(property, propertyNameFormatter)
         {
         }
 

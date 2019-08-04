@@ -5,7 +5,8 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener.TypedFormatters
 {
     internal class GuidFieldFormatter : TypedFormatter<Guid>, IFormatter
     {
-        public GuidFieldFormatter(PropertyInfo property) : base(property)
+        public GuidFieldFormatter(PropertyInfo property, Func<string, string> propertyNameFormatter)
+            : base(property, propertyNameFormatter)
         {
         }
 

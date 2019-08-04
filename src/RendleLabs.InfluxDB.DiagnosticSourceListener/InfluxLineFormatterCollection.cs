@@ -26,7 +26,6 @@ namespace RendleLabs.InfluxDB.DiagnosticSourceListener
         }
 
         private InfluxLineFormatter Create((string measurementName, Type type) args) =>
-            new InfluxLineFormatter(_nameFixer($"{_listenerName}_{args.measurementName}"), args.type,
-                _options.CustomFieldFormatters, _options.CustomTagFormatters, _options.DefaultTags);
+            new InfluxLineFormatter(_nameFixer($"{_listenerName}_{args.measurementName}"), args.type, _options);
     }
 }
